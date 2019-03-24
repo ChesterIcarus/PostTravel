@@ -1,0 +1,57 @@
+{
+    "TEST": {
+        "trip_path": "../../data/MATSim_output/sample.xml",
+        "database": {
+            "user": "root",
+            "host": "localhost",
+            "db": "icarus_TEST",
+            "password": "",
+            "table": "trip_no_route_TEST",
+            "schema": [
+                "person_id VARCHAR(25)",
+                "trip_id TINYINT UNSIGNED",
+                "time_sec MEDIUMINT UNSIGNED",
+                "direction TINYINT UNSIGNED",
+                "mode TINYINT UNSIGNED"
+            ],
+            "indexes": [
+                {
+                    "name": "time_index",
+                    "columns": [
+                        "time_sec"
+                    ]
+                }
+            ]
+        }
+    },
+    "TEST_2": {
+        "database": {
+            "user": "root",
+            "host": "localhost",
+            "db": "icarus_TEST",
+            "password": "",
+            "table": "trip_no_route_TEST",
+            "schema": [
+                "person_id VARCHAR(25)",
+                "trip_id TINYINT UNSIGNED",
+                "time_sec MEDIUMINT UNSIGNED",
+                "direction TINYINT UNSIGNED",
+                "mode TINYINT UNSIGNED"
+            ],
+            "indexes": [
+                {
+                    "name": "time_index",
+                    "columns": [
+                        "time_sec"
+                    ]
+                },
+                {
+                    "name": "mode_index",
+                    "columns": [
+                        "mode"
+                    ]
+                }
+            ]
+        }
+    }
+}

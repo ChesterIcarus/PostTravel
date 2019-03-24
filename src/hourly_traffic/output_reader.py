@@ -52,6 +52,8 @@ class OutputLinkFlow:
             min_int = int(time_str[3:5]) * 60
             sec_int = int(time_str[6:8])
             return (hr_int + min_int + sec_int)
+        raise ValueError('''Invalid Time Resolution passed
+                            to OutputLinkFlow.parse_time''')
 
     def parse_leg(self, element):
         ''' Parse the leg of a trip. If the leg has a route (> 2 links traversed),

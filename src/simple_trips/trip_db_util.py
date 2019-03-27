@@ -1,5 +1,4 @@
 from typing import List, Dict, Tuple
-from getpass import getpass
 from warnings import warn
 import MySQLdb as sql
 import MySQLdb.connections as connections
@@ -45,17 +44,23 @@ class DatabaseHandle:
                 self.user = params['user']
                 self.host = params['host']
                 self.db = params['db']
-                self.table = None
-                self.columns = None
+
         else:
             self.user = None
             self.host = None
             self.db = None
             self.cursor = None
             self.connection = None
-            self.table = None
-            self.columns = None
             warn('No valid database passed, DatabaseHandle initialized without connection')
+        if 'table' in params:
+            self.table = params['table']
+        else:
+            self.table = None
+        if 'schema' in params:
+            self.columns = [column.split(' ')[0]
+                            for column in params['schema']]
+        else:
+            self.columns = None
 
     def create_trip_table(self, table, schema):
         self.table = table
@@ -70,9 +75,10 @@ class DatabaseHandle:
 
     def write_trips(self, trips):
         s_strs = (', ').join(['%s'] * len(self.columns))
+        col_str = (', ').join(self.columns)
         exec_str = f'''
                     INSERT INTO {self.db}.{self.table}
-                        ({self.columns})
+                        ({col_str})
                     values ({s_strs})
                    '''
         self.cursor.executemany(exec_str, trips)
@@ -86,3 +92,17 @@ class DatabaseHandle:
                             ({formed_index_cols})'''
         self.cursor.execute(exec_str)
         self.connection.commit()
+
+    def get_trips(self, time_start, time_end, direction):
+        exec_str = f''' SELECT 
+                            COUNT(*) 
+                        from 
+                            {self.db}.{self.table}
+                        WHERE
+                            time_sec > {time_start}
+                        and
+                            time_sec < {time_end}
+                        and 
+                            direction = {direction}'''
+        self.cursor.execute(exec_str)
+        return self.cursor.fetchall()[0][0]

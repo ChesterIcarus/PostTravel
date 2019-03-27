@@ -14,7 +14,7 @@ if __name__ == "__main__":
     params['database']['password'] = getpass(
         f'Password for {params["database"]["user"]}: ')
 
-    handler = SimpleTripHandler(params['database'])
+    handler = SimpleTripHandler(params['database'], encode=params['encoding'])
 
     handler.database.create_trip_table(params['database']['table'],
                                        params['database']['schema'])

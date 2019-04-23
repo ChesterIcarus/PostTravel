@@ -1,33 +1,37 @@
 {
     "TEST": {
-        "trip_path": "../../data/MATSim_output/samSample_output_plans.xml",
+        "source_path": "data/Samples/sample_output_plans.xml",
         "database": {
             "user": "root",
             "host": "localhost",
-            "db": "icarus_TEST",
+            "db": "icarus_postsim",
             "password": "",
-            "table": "trip_no_route_TEST",
-            "schema": [
-                "person_id VARCHAR(25)",
-                "trip_id TINYINT UNSIGNED",
-                "time_sec MEDIUMINT UNSIGNED",
-                "direction TINYINT UNSIGNED",
-                "mode TINYINT UNSIGNED"
-            ],
-            "indexes": [
-                {
-                    "name": "time_index",
-                    "columns": [
-                        "time_sec"
+            "tables": {
+                "legs": {
+                    "schema": [
+                        "person_id MEDIUMINT UNSIGNED",
+                        "leg_id TINYINT UNSIGNED",
+                        "trav_time MEDIUMINT UNSIGNED",
+                        "distance DOUBLE",
+                        "mode TINYINT UNSIGNED"
+                    ],
+                    "indexes":
+                    [
+                        {
+                            "name": "time_index",
+                            "columns": [ "trav_time" ]
+                        }
                     ]
                 },
-                {
-                    "name": "direction_index",
-                    "columns": [
-                        "direction"
+                "activities": {
+                    "schema": [
+                        "person_id MEDIUMINT UNSIGNED",
+                        "act_id TINYINT UNSIGNED",
+                        "end_time MEDIUMINT UNSIGNED",
+                        "act_type MEDIUMINT UNSIGNED"
                     ]
                 }
-            ]
+            }
         },
         "encoding": {
             "mode": {

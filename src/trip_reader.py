@@ -7,7 +7,7 @@ from simple_trips.handler import SimpleTripHandler
 CONFIG = 'TEST'
 
 if __name__ == "__main__":
-    with open('simple_trips/config.json', 'r') as handle:
+    with open('PostTravel/src/simple_trips/config.json', 'r') as handle:
         params = json.load(handle)
 
     params = params[CONFIG]
@@ -16,11 +16,11 @@ if __name__ == "__main__":
 
     handler = SimpleTripHandler(params['database'], encode=params['encoding'])
 
-    handler.database.create_trip_table(params['database']['table'],
-                                       params['database']['schema'])
+    for table in ['legs', 'activities']:
+        handler.database.create_table(table)
 
-    handler.parse_trips(params['trip_path'])
+    handler.parse_plans(params['source_path'])
 
-    for index in params['database']['indexes']:
-        handler.database.create_index(index['name'],
-                                      index['columns'])
+    # for index in params['database']['indexes']:
+    #    handler.database.create_index(index['name'],
+    #                                  index['columns'])

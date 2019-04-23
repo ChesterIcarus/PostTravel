@@ -84,9 +84,9 @@ class SimpleTripHandler:
                         leg_ct += 1
 
                     if elem.tag == 'activity':
-                        end_time = self.time_to_sec(elem.attrib['trav_time'])
+                        end_time = self.time_to_sec(elem.attrib['end_time'])
                         act_type = self.encode['activity'][elem.attrib['type']]
-                        acts.append(person_id, act_ct, end_time, act_type)
+                        acts.append((person_id, act_ct, end_time, act_type))
                         act_ct += 1
         self.database.write_legs(legs)
         self.database.write_acts(acts)

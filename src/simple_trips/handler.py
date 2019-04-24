@@ -72,13 +72,14 @@ class SimpleTripHandler:
                             root.clear()
                             legs = []
                             acts = []
+                            plan_ct = 0
+                        plan_ct += 1
 
                     if elem.tag == 'leg':
                         trav_time = self.time_to_sec(elem.attrib['trav_time'])
                         mode = self.encode['mode'][elem.attrib['mode']]
-
-                    if elem.tag == 'route':
-                        distance = float(elem.attrib['distance'])
+                        route = list(elem)[0]
+                        distance = float(route.attrib['distance'])
                         legs.append((person_id, leg_ct, trav_time,
                                      distance, mode))
                         leg_ct += 1
@@ -90,18 +91,3 @@ class SimpleTripHandler:
                         act_ct += 1
         self.database.write_legs(legs)
         self.database.write_acts(acts)
-
-    # def parse_leg(self, elem: etree.Element):
-    #     ''' Parse the departure and arrival time from a leg
-    #     Return both as the integer-second repr of that value
-    #     '''
-    #     depart = elem.attrib['dep_time'].split(':')
-
-    #     dep_sec = ((int(depart[0]) * 60 * 60) +
-    #                (int(depart[1]) * 60) +
-    #                int(depart[2]))
-    #     arrive = elem.attrib['trav_time'].split(':')
-    #     arr_sec = ((int(arrive[0]) * 60 * 60) +
-    #                (int(arrive[1]) * 60) +
-    #                int(arrive[2]))
-    #     return (dep_sec, (arr_sec + dep_sec))

@@ -3,11 +3,13 @@
         "network_src": "data/Samples/output_network.xml",
         "event_src": "data/Samples/sample_output_events.xml",
         "flow_bins": "24",
-        "flow_dest": "./sample_flow.csv"
+        "flow_dest": "PostTravel/sample_flow.csv"
     },
     "full": {
         "network_source": "data/MATSim_output/chris_run/output_network.xml",
-        "event_souce": "data/MATSim_output/chris_run/output_events.xml"
+        "event_souce": "data/MATSim_output/chris_run/output_events.xml",
+        "flow_bins": "24",
+        "flow_dest": "PostTravel/full_flow.csv"
     }
 
 }

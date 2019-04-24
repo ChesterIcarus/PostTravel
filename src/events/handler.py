@@ -30,18 +30,7 @@ class ChrisFlow:
         for event, elem in context:
             if event == 'start':
                 if elem.tag == 'link':
-                    # try:
-                    #     child =  list(elem)[0]
-                    #     gchild = list(child)[0]
-                    # except Exception:
-                    #     print(elem)
-                    #     print(list(elem))
-                    # if 'origid' in gchild.attrib:
-                    #     id_ = child.text
-                    #     network.links[id_] = Link(id_, elem.attrib['from'],
-                    #                               elem.attrib['to'],
-                    #                               elem.attrib['length'])
-                    id_ = elem.attrib('id')
+                    id_ = elem.attrib['id']
                     network.links[id_] = Link(id_,
                                               elem.attrib['from'],
                                               elem.attrib['to'],
@@ -61,12 +50,15 @@ class ChrisFlow:
 
 
     def events_to_flow(self, filepath, links: List[str],
-                       bins=24,iter_size=250000):
+                       bins=24,iter_size=250000, drop_unused=True):
         ''' Read MATsim event XML file output and calculate flow '''
-        # Allow us to iteratively parse the XML document
-        self.sec_per_bin = floor(self.simulation_seconds / int(bins))
-        flow = Flow(bins, {link: LinkFlow(link, [0]*int(bins)) for link in links})
+        bins = int(bins)
+        self.sec_per_bin = floor(self.simulation_seconds / bins)
+        flow = Flow(bins, {link: LinkFlow(link, [0]*bins) for link in links})
+        if drop_unused:
+            untouched_links = set(links)
         iter_ct = 0
+        # Allow us to iteratively parse the XML document
         context = etree.iterparse(filepath, events=('start', 'end'))
         context = iter(context)
         event, root = next(context)
@@ -77,11 +69,16 @@ class ChrisFlow:
                 iter_ct += 1
                 if elem.attrib['type'] == 'entered link':
                     id_ = elem.attrib['link']
+                    if drop_unused:
+                        untouched_links.remove(id_)
                     bin_ = self.time_bin_index(elem.attrib['time'])
                     flow.link_flow[id_].bins[bin_] += 1
                 if iter_ct > iter_size:
                     root.clear()
                     iter_ct = 0
+        if drop_unused:
+            for link in untouched_links:
+                flow.link_flow.pop(link)
         return flow
 
     def time_bin_index(self, time_str) -> int:
@@ -91,10 +88,7 @@ class ChrisFlow:
     def flow_to_csv(self, flow: Flow, dest: str):
         header = f'''link_id,{
             (",").join([f"hour_{x}" for x in range(flow.bins)])}'''
-        print(header)
-        input()
         with open(dest, 'w+') as handle:
             f_writer = csv.writer(handle)
-
             for link in list(flow.link_flow.values()):
-                pass
+                f_writer.writerow((link.id, *link.bins,))

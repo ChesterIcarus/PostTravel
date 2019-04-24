@@ -20,4 +20,4 @@ if __name__ == "__main__":
     flow = example.events_to_flow(params['event_src'], list(network.links),
                                   bins=params['flow_bins'], iter_size=250000)
 
-    example.to_csv(flow, params['flow_dest'])
+    example.flow_to_csv(flow, params['flow_dest'])

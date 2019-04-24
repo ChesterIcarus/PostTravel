@@ -1,7 +1,7 @@
 {
     "sample": {
         "network_src": "data/Samples/output_network.xml",
-        "event_src": "data/Samples/sample_output_events.xml",
+        "event_src": "data/Samples/sample_0.events.xml",
         "flow_bins": "24",
         "flow_dest": "PostTravel/sample_flow.csv"
     },

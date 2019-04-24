@@ -70,7 +70,7 @@ class ChrisFlow:
                 if elem.attrib['type'] == 'entered link':
                     id_ = elem.attrib['link']
                     if drop_unused:
-                        untouched_links.remove(id_)
+                        untouched_links.discard(id_)
                     bin_ = self.time_bin_index(elem.attrib['time'])
                     flow.link_flow[id_].bins[bin_] += 1
                 if iter_ct > iter_size:

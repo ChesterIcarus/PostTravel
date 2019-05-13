@@ -1,13 +1,15 @@
 from typing import List, Dict, T
-from math import pi, sin, floor
-from timeit import timeit
 import os
 import wget
-import xarray as xr
-from pyproj import Proj, transform, itransform
-
 import pandas as pd
 import numpy as np
+
+from pyproj import Proj, transform, Transformer
+from math import pi, sin, floor
+import dask
+import dask.dataframe as dd
+import xarray as xr
+
 
 
 class Daymet:
@@ -41,9 +43,11 @@ class Daymet:
             df = df.dropna(subset=['tmax', 'yearday'], how='any')
             df = df.query('nv == 0')
             df = df.reset_index()
-            df = df.drop(['x', 'y', 'nv',
-                          'lambert_conformal_conic',
-                          'time_bnds', 'time'], axis=1)
+            df[['x_meter', 'y_meter']] = df[['x', 'y']]
+            df[['x_proj', 'y_proj']] = df[['lat', 'lon']]
+            df = df.drop(['nv', 'time_bnds', 'time',
+                          'x', 'y', 'lat', 'lon',
+                          'lambert_conformal_conic'], axis=1)
             if concat:
                 df_list.append(df)
         if concat:
@@ -54,19 +58,30 @@ class Daymet:
                 in_proj: str, out_proj: str) -> pd.DataFrame:
         ''' Project coordinates in given DF to desired projection.
             in_proj and out_proj should both be strings of EPSG codes '''
-        self.in_p = Proj(init=in_proj)
-        self.out_p = Proj(init=out_proj)
-        temp[['lon', 'lat']] = temp.apply(self.trans_df, axis=1)
+        in_p = Proj(init=in_proj)
+        out_p = Proj(init=out_proj)
+        tformer = Transformer.from_proj(in_p, out_p)
+        with dask.config.set(scheduler='processes'):
+            dd_temp = dd.from_pandas(temp, 8)
+            dd_proc = dd_temp.apply(lambda row:
+                                        tformer.transform(row['y_proj'],
+                                                        row['x_proj']),
+                                        axis=1)
+            points_proj = dd_proc.compute()
+        points_proj = pd.DataFrame(points_proj.values.tolist(),
+                                   index=points_proj.index)
+        temp['y_proj'] = points_proj[0]
+        temp['x_proj'] = points_proj[1]
         return temp
 
-    def trans_df(self, row):
-        ''' Function to be mapped to a dataframe to project coords'''
-        row[['lon', 'lat']] = transform(self.in_p, self.out_p,
-                                        row['lon'], row['lat'])
-        return row[['lon', 'lat']]
-
-    def bounding_calc(self):
-        pass
+    def bounding_calc(self, temp: pd.DataFrame):
+        bounds = {'x_proj': 0, 'y_proj': 0}
+        for bound in bounds:
+            values = temp[bound].unique()
+            n_vals = values.shape[0]
+            values = pd.DataFrame(np.sort(values), columns=[bound])
+            diff = values.diff().sum()
+            bounds[bound] = diff[bound] / n_vals
 
     def to_steps(self, steps: int, seconds: int,
                  temp: pd.DataFrame) -> pd.DataFrame:

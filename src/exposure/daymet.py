@@ -44,6 +44,8 @@ class Daymet:
             df = df.query('nv == 0')
             df = df.reset_index()
             df[['x_meter', 'y_meter']] = df[['x', 'y']]
+            df['x_meter'] = pd.to_numeric(df['x_meter'], downcast='signed')
+            df['y_meter'] = pd.to_numeric(df['y_meter'], downcast='signed')
             df[['x_proj', 'y_proj']] = df[['lat', 'lon']]
             df = df.drop(['nv', 'time_bnds', 'time',
                           'x', 'y', 'lat', 'lon',
@@ -54,34 +56,42 @@ class Daymet:
             return pd.concat(df_list)
         return df_list
 
-    def project(self, temp: pd.DataFrame,
+    def project_from_sys(self, temp: pd.DataFrame,
                 in_proj: str, out_proj: str) -> pd.DataFrame:
         ''' Project coordinates in given DF to desired projection.
             in_proj and out_proj should both be strings of EPSG codes '''
         in_p = Proj(init=in_proj)
         out_p = Proj(init=out_proj)
         tformer = Transformer.from_proj(in_p, out_p)
-        with dask.config.set(scheduler='processes'):
-            dd_temp = dd.from_pandas(temp, 8)
-            dd_proc = dd_temp.apply(lambda row:
-                                        tformer.transform(row['y_proj'],
-                                                        row['x_proj']),
-                                        axis=1)
-            points_proj = dd_proc.compute()
+        points_proj = temp.apply(lambda row: tformer.transform(row['y_proj'],
+                                                               row['x_proj']),
+                                 axis=1)
         points_proj = pd.DataFrame(points_proj.values.tolist(),
                                    index=points_proj.index)
         temp['y_proj'] = points_proj[0]
         temp['x_proj'] = points_proj[1]
         return temp
 
-    def bounding_calc(self, temp: pd.DataFrame):
-        bounds = {'x_proj': 0, 'y_proj': 0}
-        for bound in bounds:
-            values = temp[bound].unique()
-            n_vals = values.shape[0]
-            values = pd.DataFrame(np.sort(values), columns=[bound])
-            diff = values.diff().sum()
-            bounds[bound] = diff[bound] / n_vals
+    # def project_from_str(self, temp: pd.DataFrame, proj_str: str, n_split=8):
+    #     proj = Proj(proj_str)
+    #     with dask.config.set(scheduler='processes'):
+    #         dd_temp = dd.from_pandas(temp, n_split)
+    #         dd_proc = dd_temp.apply(lambda row:
+    #                                 proj(row['y_proj'], row['x_proj']),
+    #                                 axis=1, meta={'x': 'f8', 'y': 'f8'})
+    #         points_proj = dd_proc.compute()
+    #         points_proj = pd.DataFrame(points_proj.values.tolist(),
+    #                                 index=points_proj.index)
+    #         temp['y_proj'] = points_proj[0]
+    #         temp['x_proj'] = points_proj[1]
+    #         return temp
+
+    def temp_by_bounds(self, temp: pd.DataFrame):
+        diffs = {'x_proj': None, 'y_proj': None}
+        for diff_ in diffs:
+            values = temp[diff_].unique()
+            values = pd.DataFrame(np.sort(values), columns=[diff_])
+            diffs[diff_] = values.diff()
 
     def to_steps(self, steps: int, seconds: int,
                  temp: pd.DataFrame) -> pd.DataFrame:
@@ -104,6 +114,8 @@ class Daymet:
 
 
     def diurnal_approx(self, row: pd.Series, times: List[float]) -> float:
+        ''' Formulae for Diurnal temperature approximiation
+        as per 1984 paper'''
         m_ = (row.at['tmax'] + row.at['tmin']) / 2
         w_ = (row.at['tmax'] - row.at['tmin']) / 2
         return m_ + (w_ * sin(times[row.at['step']]))

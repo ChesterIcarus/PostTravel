@@ -1,11 +1,14 @@
 from typing import List, Dict, T
 import os
 import wget
+from math import sqrt
 import pandas as pd
 import numpy as np
 
+import geopandas as gpd
 from pyproj import Proj, transform, Transformer
 from math import pi, sin, floor
+from shapely.strtree import STRtree
 import dask
 import dask.dataframe as dd
 import xarray as xr
@@ -26,72 +29,75 @@ class Daymet:
         paths = [f'{out_dir}{tile}_{t_}.nc' for tile in tiles for t_ in temps]
         urls = [f'{url}{tile}{t_}' for tile in tiles for t_ in url_temps]
         fetched = list()
+        for tile in tiles:
+            for temp in temps:
+                path = f'{out_dir}{tile}_{t_}.nc'
+                pass
+
         for i in range(len(paths)):
             if os.path.isfile(paths[i]) and not override:
                 continue
             wget.download(urls[i], paths[i])
-            fetched.append(paths[i])
+            if 'tmin' in paths[i]:
+                fetched.append({paths[i]})
         return fetched
 
 
-    def read(self, files: List[str], concat=True) -> pd.DataFrame:
+    def read(self, files: List[str], yearday: int=219, concat=True) -> pd.DataFrame:
         ''' Read a list of DAYmet files in netCDF and convert to pandas DF,
         with the option of merging the tiles into a single dataframe '''
+        main_df = pd.DataFrame()
         df_list = list()
         for file_ in files:
             df = xr.open_dataset(file_).to_dataframe()
             df = df.dropna(subset=['tmax', 'yearday'], how='any')
-            df = df.query('nv == 0')
+            df = df.query(f'nv == 0 & yearday == {yearday}')
             df = df.reset_index()
-            df[['x_meter', 'y_meter']] = df[['x', 'y']]
-            df['x_meter'] = pd.to_numeric(df['x_meter'], downcast='signed')
-            df['y_meter'] = pd.to_numeric(df['y_meter'], downcast='signed')
-            df[['x_proj', 'y_proj']] = df[['lat', 'lon']]
+            df[['x', 'y']] = df[['lon', 'lat']]
             df = df.drop(['nv', 'time_bnds', 'time',
-                          'x', 'y', 'lat', 'lon',
+                          'lat', 'lon',
                           'lambert_conformal_conic'], axis=1)
             if concat:
+                main_df = pd.concat([main_df, df], ignore_index=True)
+            else:
                 df_list.append(df)
         if concat:
-            return pd.concat(df_list)
+            return main_df
         return df_list
 
-    def project_from_sys(self, temp: pd.DataFrame,
-                in_proj: str, out_proj: str) -> pd.DataFrame:
-        ''' Project coordinates in given DF to desired projection.
-            in_proj and out_proj should both be strings of EPSG codes '''
-        in_p = Proj(init=in_proj)
-        out_p = Proj(init=out_proj)
-        tformer = Transformer.from_proj(in_p, out_p)
-        points_proj = temp.apply(lambda row: tformer.transform(row['y_proj'],
-                                                               row['x_proj']),
-                                 axis=1)
-        points_proj = pd.DataFrame(points_proj.values.tolist(),
-                                   index=points_proj.index)
-        temp['y_proj'] = points_proj[0]
-        temp['x_proj'] = points_proj[1]
-        return temp
+    def nearest_approx(self, data: pd.DataFrame, orig_crs, new_crs):
+        ''' Used for approximating neareast points for
+        temperature points from raster.  Final value used in
+        query of STR-tree as buffer value '''
+        tformer = Transformer.from_proj(Proj(orig_crs), Proj(new_crs))
+        bottom_left = data[['x', 'y']].head(1).values.tolist()[0]
+        top_right = data[['x', 'y']].tail(1).values.tolist()[0]
+        bottom_left = tformer.transform(bottom_left[1],bottom_left[0])
+        top_right = tformer.transform(top_right[1], top_right[0])
+        y_delta = top_right[0] - bottom_left[0]
+        x_delta = top_right[1] - bottom_left[1]
+        n_axis = sqrt(data.shape[0])
+        points_on_hyp = sqrt((n_axis ** 2) + (n_axis ** 2))
+        hyp_length = sqrt((x_delta ** 2) + (y_delta ** 2))
+        avg_dist = hyp_length / ((points_on_hyp - 1) / 2)
+        return avg_dist
 
-    # def project_from_str(self, temp: pd.DataFrame, proj_str: str, n_split=8):
-    #     proj = Proj(proj_str)
-    #     with dask.config.set(scheduler='processes'):
-    #         dd_temp = dd.from_pandas(temp, n_split)
-    #         dd_proc = dd_temp.apply(lambda row:
-    #                                 proj(row['y_proj'], row['x_proj']),
-    #                                 axis=1, meta={'x': 'f8', 'y': 'f8'})
-    #         points_proj = dd_proc.compute()
-    #         points_proj = pd.DataFrame(points_proj.values.tolist(),
-    #                                 index=points_proj.index)
-    #         temp['y_proj'] = points_proj[0]
-    #         temp['x_proj'] = points_proj[1]
-    #         return temp
+    def project_df(self, data: pd.DataFrame, orig_crs: str, new_crs: str):
+        gdf = gpd.GeoDataFrame(
+            data, geometry=gpd.points_from_xy(data['x'], data['y']))
+        gdf.crs = {'init': orig_crs}
+        gdf = gdf.to_crs({'init': new_crs})
+        gdf['x'] = gdf.geometry.x
+        gdf['y'] = gdf.geometry.y
+        return gdf
 
-    def temp_by_bounds(self, temp: pd.DataFrame):
-        diffs = {'x_proj': None, 'y_proj': None}
-        for diff_ in diffs:
-            values = temp[diff_].unique()
-            values = pd.DataFrame(np.sort(values), columns=[diff_])
-            diffs[diff_] = values.diff()
+    def temp_assignment(self, temp: gpd.GeoDataFrame,
+                        apns: gpd.GeoDataFrame, buffer: int):
+        tree = STRtree(temp.geometry)
+
+
+    def closest(self, row):
+        pass
 
     def to_steps(self, steps: int, seconds: int,
                  temp: pd.DataFrame) -> pd.DataFrame:

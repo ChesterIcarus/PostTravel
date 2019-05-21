@@ -1,0 +1,40 @@
+{
+    "sample": {
+        "parcels": {
+            "project_to": "epsg:2223",
+            "path": "data/mag_to_matsim_required_aux/parcels_all/parcels_all.shp"
+        },
+        "daymet": {
+            "url": "https://thredds.daac.ornl.gov/thredds/fileServer/ornldaac/1328/tiles/2018/",
+            "tiles": ["11014", "11015"],
+            "orig_crs": "epsg:4326",
+            "proj_crs": "epsg:2223"
+        },
+        "database": {
+            "user": "root",
+            "password": "",
+            "host": "localhost",
+            "db": "icarus_postsim",
+            "tables": {
+                "nodes": {},
+                "links": {},
+                "apn": {
+                    "schema": [
+                        "APN VARCHAR(10)",
+                        "x DECIMAL(16, 10)",
+                        "y DECIMAL(16, 10)",
+                        "pt POINT"
+                    ],
+                    "comp_PK": [ "x", "y" ],
+                    "indexes": {
+                        "test": ["apn"]
+                    }
+                },
+                "in_act_exp":{},
+                "out_act_exp": {},
+                "in_trav_exp": {},
+                "out_trav_exp": {}
+            }
+        }
+    }
+}

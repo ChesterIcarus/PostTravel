@@ -16,7 +16,7 @@ class DatabaseHandle:
         if type(handle) is DatabaseHandle:
             self = handle
 
-        if isinstance(params, dict):
+        elif isinstance(params, dict):
             try:
                 self.connection = sql.connect(user=params['user'],
                                               password=params['password'],
@@ -59,8 +59,6 @@ class DatabaseHandle:
     def create_table(self, table):
         table_data = self.tables[table]
         print(table_data)
-        # columns = [column.split(' ')[0] for column in table_data["schema"]]
-
         sql_schema = (', ').join(table_data['schema'])
         exec_str = f'''DROP TABLE IF EXISTS {self.db}.{table}'''
         self.cursor.execute(exec_str)
@@ -71,11 +69,34 @@ class DatabaseHandle:
         self.connection.commit()
 
     def create_index(self, table, name):
-        columns = (', ').join(
-            self.tables[table]['indexes']['columns'])
+        columns = (', ').join(self.tables[table]['indexes'][name])
         exec_str = f'''CREATE INDEX
                             {name}
                         ON {self.db}.{table}
                             ({columns})'''
         self.cursor.execute(exec_str)
+        self.connection.commit()
+
+    def alter_add_composite_PK(self, table, name):
+        formed_index_cols = (', ').join(self.tables[table]['comp_PK'])
+        exec_str = f'''ALTER TABLE {self.db}.{table}
+                        ADD PRIMARY KEY ({formed_index_cols})'''
+        self.cursor.execute(exec_str)
+        self.connection.commit()
+
+    def write_rows(self, data, table):
+        s_strs = f"({', '.join(['%s'] * len(self.tables[table]['schema']))})"
+
+        exec_str = f''' INSERT INTO {self.db}.{table}
+                        VALUES {s_strs} '''
+        self.cursor.executemany(exec_str, data)
+        self.connection.commit()
+
+    def write_geom_rows(self, data, table):
+        s_strs = f"""{', '.join(
+            ['%s'] * (len(self.tables[table]['schema']) - 1))}"""
+        s_strs += ', ST_GeomFromText(%s)'
+        exec_str = f''' INSERT INTO {self.db}.{table}
+                        VALUES ({s_strs}) '''
+        self.cursor.executemany(exec_str, data)
         self.connection.commit()

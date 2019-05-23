@@ -28,5 +28,3 @@ class ApnCleaner:
         fields.append('wkt')
         db_handle.write_geom_rows(
             [tuple(row) for row in gdf[fields].values.tolist()], table)
-
-

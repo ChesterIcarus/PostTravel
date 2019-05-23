@@ -21,8 +21,8 @@
                 "apn": {
                     "schema": [
                         "APN VARCHAR(10)",
-                        "x DECIMAL(16, 10)",
-                        "y DECIMAL(16, 10)",
+                        "x DECIMAL(17, 10)",
+                        "y DECIMAL(17, 10)",
                         "pt POINT"
                     ],
                     "comp_PK": [ "x", "y" ],

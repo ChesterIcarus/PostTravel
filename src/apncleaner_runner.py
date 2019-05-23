@@ -20,5 +20,5 @@ db_param = config['database']
 db_param['password'] = getpass(
     f'MySQL password for user {db_param["user"]}: ')
 db = DatabaseHandle(params=db_param)
-data = gpd.read_file('centroid_projected_apns_sample.gpkg', layer='parcels')
+data = gpd.read_file('centroid_projected_apns.gpkg', layer='parcels')
 cleaner.to_sql(data, db, 'apn')

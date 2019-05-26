@@ -1,0 +1,27 @@
+{
+    "WORKSTATION": {
+        "source_path": "/home/Shared/chris_run/output_plans.xml",
+        "database": {
+            "user": "root",
+            "host": "localhost",
+            "db": "chris_run",
+            "password": "",
+            "tables": {
+                "events": {
+                    "schema": [
+                        "event_id INT UNSINGED AUTOINCREMENT",
+                        "link_id INT UNSIGNED",
+                        "agent_id INT UNSIGNED",
+                        "route_index MEDIUMINT UNSIGNED",
+                        "leg_index MEDIUMINT UNSIGNED",
+                        "time INT UNSIGNED",
+                        "enter INT(1) UNSIGNED"
+                    ],
+                    "comp_PK": [
+                        "event_id"
+                    ]
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "WORKSTATION": {
+        "source_path": "/home/Shared/chris_run/",
+        "database": {
+            "user": "validation",
+            "host": "localhost",
+            "db": "icarus_postsim",
+            "password": "",
+            "tables": {
+                "legs": {
+                    "schema": [
+                        "agent_id INT UNSIGNED",
+                        "link_id INT UNSIGNED",
+                        "route_index MEDIUMINT UNSIGNED",
+                        "leg_index MEDIUMINT UNSIGNED",
+                        "start_time MEDIUMINT UNSIGNED",
+                        "end_time MEDIUMINT UNSIGNED"
+                    ]
+                }
+            }
+        }
+    }
+}

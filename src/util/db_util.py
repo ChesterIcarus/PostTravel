@@ -17,28 +17,24 @@ class DatabaseHandle:
             self = handle
 
         elif isinstance(params, dict):
+            keys = ['user', 'password', 'db', 'host', 'unix_socket']
+            login = {key:params[keys] for key in keys if key in params}
             try:
-                self.connection = sql.connect(user=params['user'],
-                                              password=params['password'],
-                                              db=params['db'], host=params['host'])
+                self.connection = sql.connect(**login)
                 self.cursor = self.connection.cursor()
                 self.user = params['user']
                 self.host = params['host']
                 self.db = params['db']
-            except sql._exceptions.DatabaseError:
+            except Exception as ex:
                 # Creating the database that didn't exist, if that was the error above
                 connection: sql.connections.Connection
-                connection = sql.connect(user=params['user'],
-                                         password=params['password'],
-                                         db='mysql', host=params['host'])
+                connection = sql.connect(**login)
                 cursor = connection.cursor()
                 cursor.execute(f'CREATE DATABASE {params["db"]}')
                 connection.commit()
                 cursor.close()
                 connection.close()
-                self.connection = sql.connect(user=params['user'],
-                                              password=params['password'],
-                                              db=params['db'], host=params['host'])
+                self.connection = sql.connect(**login)
                 self.cursor = self.connection.cursor()
                 self.user = params['user']
                 self.host = params['host']

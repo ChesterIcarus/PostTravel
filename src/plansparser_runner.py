@@ -6,8 +6,10 @@ from xmlparsing.plans.plans_parser import PlansParser
 
 CONFIG = 'TEST'
 
-with open('PostTravel/src/xmlparsing/plans/config.json', 'r') as handle:
+with open('./xmlparsing/plans/config.json', 'r') as handle:
     params = json.load(handle)
+
+params = params[CONFIG]
 
 params['database']['password'] = getpass(
     f'Password for {params["database"]["user"]}: ')

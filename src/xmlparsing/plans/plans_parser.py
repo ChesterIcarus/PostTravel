@@ -17,7 +17,7 @@ class PlansParser:
     def parse(self, filepath, bin_size=100000, silent=False):
 
         if not silent:
-            print_time(f'Beginning XML agent plan parsing from {filepath}.')
+            self.print_time(f'Beginning XML agent plan parsing from {filepath}.')
 
         # bin counter (total legs processed)
         bin_count = 0
@@ -39,11 +39,13 @@ class PlansParser:
         time = 0
         modes = set()
 
-
+        # ireate over XML tags
         for evt, elem in iterparse(filepath):
+            # tag openings
             if evt == 'start':
                 if elem.tag == 'person':
                     agent = int(elem.attrib['id'])
+            # tag closings
             elif evt == 'end':
                 if elem.tag == 'person':
                     
@@ -59,7 +61,7 @@ class PlansParser:
 
                     if bin_count >= bin_size:
                         if not silent:
-                            print_time(f'Pushing {bin_count} legs to SQL server.')
+                            self.print_time(f'Pushing {bin_count} legs to SQL server.')
 
                         self.database.write_plans(plans)
                         self.database.write_activities(activities)
@@ -67,7 +69,7 @@ class PlansParser:
                         self.database.write_legs(legs)
                         
                         if not silent:
-                            print_time(f'Resuming XML agent plan parsing.')
+                            self.print_time('Resuming XML agent plan parsing.')
 
                         plans = []
                         activities = []
@@ -94,8 +96,7 @@ class PlansParser:
                     mode = self.encoding['mode'][elem.attrib['mode']]
                     dtime = self.parse_time(elem.attrib['trav_time'])
 
-                    if mode not in modes:
-                        modes.add(mode)
+                    modes.add(mode)
 
                     routes.append([                 # ROUTES
                         agent,                      # agent_id
@@ -107,11 +108,12 @@ class PlansParser:
                     ])
 
                     time += dtime
+                    distance = 0
                     leg = 0
                     route += 1
 
                 elif elem.tag == 'route':
-                    distance = float(elem.attrib['distance'])
+                    distance += float(elem.attrib['distance'])
                     links = elem.text.split(" ")
                     leg = len(links)
 
@@ -125,14 +127,30 @@ class PlansParser:
                     ] for link, leg in zip(links, range(0, leg))])
 
                     bin_count += leg
+
+        if not silent:
+            self.print_time(f'Pushing {bin_count} legs to SQL server.')
+
+        self.database.write_plans(plans)
+        self.database.write_activities(activities)
+        self.database.write_routes(routes)
+        self.database.write_legs(legs)
+        
+        if not silent:
+            self.print_time('Completed XML agent plan parsing.')
+
+        plans = []
+        activities = []
+        routes = []
+        legs = []
     
     def parse_time(self, clk):
         clk = clk.split(':')
         return int(clk[0]) * 3600 + int(clk[1]) * 60 + int(clk[2])
 
 
-def print_time(string):
-    time = datetime.now()
-    return print('[' + time.strftime('%H:%M:%S:') + 
-        ('000' + str(time.microsecond // 1000))[-3:] +
-        ']\t' + string)
+    def print_time(self, string):
+        time = datetime.now()
+        return print('[' + time.strftime('%H:%M:%S:') + 
+            ('000' + str(time.microsecond // 1000))[-3:] +
+            ']\t' + string)

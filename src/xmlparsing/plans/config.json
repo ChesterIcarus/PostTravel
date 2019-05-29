@@ -5,6 +5,7 @@
             "user": "validation",
             "host": "localhost",
             "db": "icarus_postsim",
+            "unix_socket": "/var/lib/mysql/mysql.sock",
             "password": "",
             "tables": {
                 "plans": {
@@ -94,6 +95,7 @@
             "user": "validation",
             "host": "localhost",
             "db": "icarus_postsim",
+            "unix_socket": "/var/lib/mysql/mysql.sock",
             "password": "",
             "tables": {
                 "plans": {

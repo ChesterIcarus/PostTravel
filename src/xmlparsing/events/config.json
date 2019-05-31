@@ -1,20 +1,27 @@
 {
     "WORKSTATION": {
-        "source_path": "/home/Shared/chris_run/",
+        "source_path": "/home/Shared/chris_run/ITERS/it.0/0.events.xml",
         "database": {
             "user": "validation",
             "host": "localhost",
             "db": "icarus_postsim",
+            "unix_socket": "/var/lib/mysql/mysql.sock",
             "password": "",
             "tables": {
-                "legs": {
+                "xml_events_leg_events": {
                     "schema": [
+                        "vehicle_id INT UNSIGNED",
+                        "link_str VARCHAR(250)",
+                        "`time` MEDIUMINT UNSIGNED",
+                        "enter TINYINT(1)"
+                    ]
+                },
+                "vehicle_events": {
+                    "schema": [
+                        "vehicle_id INT UNSIGNED",
                         "agent_id INT UNSIGNED",
-                        "link_id INT UNSIGNED",
-                        "route_index MEDIUMINT UNSIGNED",
-                        "leg_index MEDIUMINT UNSIGNED",
-                        "start_time MEDIUMINT UNSIGNED",
-                        "end_time MEDIUMINT UNSIGNED"
+                        "`time` MEDIUMINT UNSIGNED",
+                        "enter TINYINT(1)"
                     ]
                 }
             }

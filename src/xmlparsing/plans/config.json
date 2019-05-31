@@ -18,7 +18,7 @@
                         "agent_id"
                     ]
                 },
-                "activivties": {
+                "activities": {
                     "schema": [
                         "agent_id INT UNSIGNED",
                         "act_index MEDIUMINT UNSIGNED",
@@ -108,7 +108,7 @@
                         "agent_id"
                     ]
                 },
-                "activivties": {
+                "activities": {
                     "schema": [
                         "agent_id INT UNSIGNED",
                         "act_index MEDIUMINT UNSIGNED",

@@ -19,6 +19,11 @@ class PlansParser:
         if not silent:
             self.print_time(f'Beginning XML agent plan parsing from {filepath}.')
 
+        # XML parser
+        parser = iterparse(filepath, events=('start', 'end'))
+        parser = iter(parser)
+        evt, root = next(parser)
+
         # bin counter (total legs processed)
         bin_count = 0
 
@@ -40,94 +45,98 @@ class PlansParser:
         modes = set()
 
         # ireate over XML tags
-        for evt, elem in iterparse(filepath):
-            # tag openings
-            if evt == 'start':
-                if elem.tag == 'person':
-                    agent = int(elem.attrib['id'])
-            # tag closings
-            elif evt == 'end':
-                if elem.tag == 'person':
-                    
-                    plans.append([                  # PLANS
-                        agent,                      # agent_id
-                        route + activity,           # size
-                        len(modes)                  # mode_count
-                    ])
-
-                    modes = set()
-                    route = 0
-                    activity = 0
-
-                    if bin_count >= bin_size:
-                        if not silent:
-                            self.print_time(f'Pushing {bin_count} legs to SQL server.')
-
-                        self.database.write_plans(plans)
-                        self.database.write_activities(activities)
-                        self.database.write_routes(routes)
-                        self.database.write_legs(legs)
+        try:
+            for evt, elem in parser:
+                # tag openings
+                if evt == 'start':
+                    if elem.tag == 'person':
+                        agent = int(elem.attrib['id'])
+                # tag closings
+                elif evt == 'end':
+                    if elem.tag == 'person':
                         
-                        if not silent:
-                            self.print_time('Resuming XML agent plan parsing.')
+                        plans.append([                  # PLANS
+                            agent,                      # agent_id
+                            route + activity,           # size
+                            len(modes)                  # mode_count
+                        ])
 
-                        plans = []
-                        activities = []
-                        routes = []
-                        legs = []
-                        bin_count = 0
-                    
-                elif elem.tag == 'activity':
-                    end_time = self.parse_time(elem.attrib['end_time'])
-                    act_type = self.encoding['activity'][elem.attrib['type']]
+                        modes = set()
+                        route = 0
+                        activity = 0
 
-                    activities.append([             # ACTIVITIES
-                        agent,                      # agent_id
-                        activity,                   # act_index
-                        time,                       # start_time
-                        end_time,                   # end_time
-                        act_type                    # act_type
-                    ])
+                        if bin_count >= bin_size:
+                            if not silent:
+                                self.print_time(f'Pushing {bin_count} legs to SQL server.')
 
-                    time = end_time
-                    activity += 1
+                            self.database.write_plans(plans)
+                            self.database.write_activities(activities)
+                            self.database.write_routes(routes)
+                            self.database.write_legs(legs)
+                            
+                            if not silent:
+                                self.print_time('Resuming XML agent plan parsing.')
 
-                elif elem.tag == 'leg':
-                    mode = self.encoding['mode'][elem.attrib['mode']]
-                    dtime = self.parse_time(elem.attrib['trav_time'])
+                            root.clear()
+                            plans = []
+                            activities = []
+                            routes = []
+                            legs = []
+                            bin_count = 0
+                        
+                    elif elem.tag == 'activity':
+                        end_time = self.parse_time(elem.attrib['end_time'])
+                        act_type = self.encoding['activity'][elem.attrib['type']]
 
-                    modes.add(mode)
+                        activities.append([             # ACTIVITIES
+                            agent,                      # agent_id
+                            activity,                   # act_index
+                            time,                       # start_time
+                            end_time,                   # end_time
+                            act_type                    # act_type
+                        ])
 
-                    routes.append([                 # ROUTES
-                        agent,                      # agent_id
-                        leg,                        # size
-                        route,                      # route_index
-                        dtime,                      # time
-                        distance,                   # distance
-                        mode                        # mode
-                    ])
+                        time = end_time
+                        activity += 1
 
-                    time += dtime
-                    distance = 0
-                    leg = 0
-                    route += 1
+                    elif elem.tag == 'leg':
+                        mode = self.encoding['mode'][elem.attrib['mode']]
+                        dtime = self.parse_time(elem.attrib['trav_time'])
 
-                elif elem.tag == 'route':
-                    distance += float(elem.attrib['distance'])
-                    links = elem.text.split(" ")
-                    leg = len(links)
+                        modes.add(mode)
 
-                    legs.extend([[                  # LEGS
-                        agent,                      # agent_id
-                        link,                       # link_id
-                        route,                      # route_index
-                        leg,                        # leg_index
-                        None,                       # start_time
-                        None,                       # end_time
-                    ] for link, leg in zip(links, range(0, leg))])
+                        routes.append([                 # ROUTES
+                            agent,                      # agent_id
+                            leg,                        # size
+                            route,                      # route_index
+                            dtime,                      # time
+                            distance,                   # distance
+                            mode                        # mode
+                        ])
 
-                    bin_count += leg
+                        time += dtime
+                        distance = 0
+                        leg = 0
+                        route += 1
 
+                    elif elem.tag == 'route':
+                        distance += float(elem.attrib['distance'])
+                        links = elem.text.split(" ")
+                        leg = len(links)
+
+                        legs.extend([[                  # LEGS
+                            agent,                      # agent_id
+                            link,                       # link_id
+                            route,                      # route_index
+                            leg,                        # leg_index
+                            None,                       # start_time
+                            None,                       # end_time
+                        ] for link, leg in zip(links, range(0, leg))])
+
+                        bin_count += leg
+        except Exception as ex:
+            pass
+        
         if not silent:
             self.print_time(f'Pushing {bin_count} legs to SQL server.')
 
@@ -139,6 +148,7 @@ class PlansParser:
         if not silent:
             self.print_time('Completed XML agent plan parsing.')
 
+        root.clear()
         plans = []
         activities = []
         routes = []

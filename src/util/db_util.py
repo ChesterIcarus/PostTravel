@@ -17,8 +17,8 @@ class DatabaseHandle:
             self = handle
 
         elif isinstance(params, dict):
-            keys = ['user', 'password', 'db', 'host', 'unix_socket']
-            login = {key:params[keys] for key in keys if key in params}
+            keys = ('user', 'password', 'db', 'host', 'unix_socket')
+            login = {key:params[key] for key in keys if key in params}
             try:
                 self.connection = sql.connect(**login)
                 self.cursor = self.connection.cursor()
@@ -52,15 +52,17 @@ class DatabaseHandle:
         else:
             self.tables = None
 
-    def create_table(self, table):
+    def create_table(self, table, silent=False):
         table_data = self.tables[table]
-        print(table_data)
+        if not silent:
+            print(table_data)
         sql_schema = (', ').join(table_data['schema'])
         exec_str = f'''DROP TABLE IF EXISTS {self.db}.{table}'''
         self.cursor.execute(exec_str)
         self.connection.commit()
         exec_str = f'''CREATE TABLE {self.db}.{table} ({sql_schema})'''
-        print(exec_str)
+        if not silent:
+            print(exec_str)
         self.cursor.execute(exec_str)
         self.connection.commit()
 

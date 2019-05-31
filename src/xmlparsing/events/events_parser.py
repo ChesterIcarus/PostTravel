@@ -24,7 +24,7 @@ class EventsParser:
 
         leg_evts: List[Tuple[int, str, int, int]] = list()
         veh_evts: List[Tuple[int, int, int, int]] = list()
-        bin_count: int = 0        
+        bin_count: int = 0
 
         for evt, elem in parser:
             if elem.tag == 'event':
@@ -68,8 +68,13 @@ class EventsParser:
                     self.database.write_leg_evts(leg_evts)
                     self.database.write_veh_evts(veh_evts)
                     root.clear()
-                    leg_evts = []
-                    veh_evts = []
+                    del leg_evts[:]
+                    del veh_evts[:]
+                    leg_evts = list()
+                    veh_evts = list()
+                    # leg_evts = []
+                    # veh_evts = []
+
                     bin_count = 0
                     self.print(str(gc.get_stats()))
                     if not silent:

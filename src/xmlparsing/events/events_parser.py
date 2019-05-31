@@ -61,7 +61,7 @@ class EventsParser:
                         0
                     ))
                     bin_count += 1
-                elem.clear()
+                # elem.clear()
                 if bin_count >= bin_size:
                     if not silent:
                         self.print(f'Pushing {bin_count} events to SQL database.')
@@ -81,7 +81,7 @@ class EventsParser:
                         mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
                         self.print(f'Peak process memory usage: {mem} kB.')
                         self.print(f'Resuming XML leg/vehicle event parsing.')
-        
+
         if not silent:
             self.print(f'Pushing {bin_count} events to SQL database.')
         self.database.write_leg_evts(leg_evts)

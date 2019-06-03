@@ -13,22 +13,49 @@ class EventsParser:
     def __init__(self, database=None):
         self.database = EventsDatabaseHandle(database)
 
-    def parse(self, filepath, bin_size=100000, silent=False):
-        
-        if not silent:
-            self.print(f'Beginning XML leg/vehicle event parsing from {filepath}.')
+    def parse(self, filepath, bin_size=1000000, silent=False, update=False):
 
-        parser = etree.iterparse(filepath, events=('end',))
+        parser = etree.iterparse(filepath, events=('end','start'))
         parser = iter(parser)
         evt, root = next(parser)
+
+        types: List[str] = ['entered link', 'left link', 
+            'PersonEntersVehicle', 'PersonLeavesVehicle']
 
         leg_evts: List[Tuple[int, str, int, int]] = list()
         veh_evts: List[Tuple[int, int, int, int]] = list()
         bin_count: int = 0
+        total_count: int = 0
+
+        if not silent:
+            self.print(f'Beginning XML leg/vehicle event parsing from {filepath}.')
+
+        if update:
+            if not silent:
+                self.print('Finding where we left off parsing last.')
+            offset = self.database.get_leg_count()
+            offset += self.database.get_veh_count()
+            if not silent:
+                self.print(f'Skipping to event {offset} of XML file.')
 
         for evt, elem in parser:
-            if elem.tag == 'event':
+            if elem.tag == 'event' and evt == 'end':
                 etype = elem.attrib['type']
+                if update and etype in types:
+                    bin_count += 1
+                    total_count += 1
+                    if bin_count >= bin_size:
+                        root.clear()
+                        bin_count = 0
+                    if total_count == offset:
+                        root.clear()
+                        bin_count = 0
+                        update = False
+                        if not silent:
+                            self.print('Event skipping complete.')
+                            self.print('Resuming XML leg/vehicle event parsing')
+                    continue
+
                 if etype == 'entered link':
                     leg_evts.append((
                         int(elem.attrib['vehicle']),
@@ -61,7 +88,6 @@ class EventsParser:
                         0
                     ))
                     bin_count += 1
-                # elem.clear()
                 if bin_count >= bin_size:
                     if not silent:
                         self.print(f'Pushing {bin_count} events to SQL database.')
@@ -72,14 +98,8 @@ class EventsParser:
                     del veh_evts[:]
                     leg_evts = list()
                     veh_evts = list()
-                    # leg_evts = []
-                    # veh_evts = []
-
                     bin_count = 0
-                    self.print(str(gc.get_stats()))
                     if not silent:
-                        mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                        self.print(f'Peak process memory usage: {mem} kB.')
                         self.print(f'Resuming XML leg/vehicle event parsing.')
 
         if not silent:

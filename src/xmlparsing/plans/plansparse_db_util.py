@@ -34,14 +34,3 @@ class PlansDatabaseHandle(DatabaseHandle):
         '''
         self.cursor.executemany(query, routes)
         self.connection.commit()
-
-    def write_legs(self, legs):
-        cols = (', ').join([
-            col.split(' ')[0] for col in self.tables['legs']['schema']])
-        vals = (', ').join(['%s'] * len(self.tables['legs']['schema']))
-        query = f'''
-            INSERT INTO {self.db}.legs ({cols})
-            VALUES ({vals})
-        '''
-        self.cursor.executemany(query, legs)
-        self.connection.commit()

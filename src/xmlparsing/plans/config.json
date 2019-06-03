@@ -25,26 +25,24 @@
                         "start_time MEDIUMINT UNSIGNED",
                         "end_time MEDIUMINT UNSIGNED",
                         "act_type MEDIUMINT UNSIGNED"
+                    ],
+                    "comp_PK": [
+                        "agent_id",
+                        "act_index"
                     ]
                 },
                 "routes": {
                     "schema": [
                         "agent_id INT UNSIGNED",
-                        "size MEDIUMINT UNSIGNED",
                         "route_index MEDIUMINT UNSIGNED",
+                        "size MEDIUMINT UNSIGNED",
                         "time INT UNSIGNED",
                         "distance FLOAT",
                         "mode TINYINT UNSIGNED"
-                    ]
-                },
-                "legs": {
-                    "schema": [
-                        "agent_id INT UNSIGNED",
-                        "link_id INT UNSIGNED",
-                        "route_index MEDIUMINT UNSIGNED",
-                        "leg_index MEDIUMINT UNSIGNED",
-                        "start_time MEDIUMINT UNSIGNED",
-                        "end_time MEDIUMINT UNSIGNED"
+                    ],
+                    "comp_PK": [
+                        "agent_id",
+                        "route_index"
                     ]
                 }
             }

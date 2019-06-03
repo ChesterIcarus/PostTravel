@@ -2,8 +2,6 @@ from typing import List, Dict, Tuple
 import xml.etree.ElementTree as etree
 from datetime import datetime
 import numpy as np
-import resource
-import gc
 
 from xmlparsing.events.eventsparse_db_util import EventsDatabaseHandle
 
@@ -19,8 +17,8 @@ class EventsParser:
         parser = iter(parser)
         evt, root = next(parser)
 
-        types: List[str] = ['entered link', 'left link', 
-            'PersonEntersVehicle', 'PersonLeavesVehicle']
+        types: Tuple[str] = ('entered link', 'left link', 
+            'PersonEntersVehicle', 'PersonLeavesVehicle')
 
         leg_evts: List[Tuple[int, str, int, int]] = list()
         veh_evts: List[Tuple[int, int, int, int]] = list()

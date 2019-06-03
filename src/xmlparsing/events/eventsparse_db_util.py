@@ -47,3 +47,27 @@ class EventsDatabaseHandle(DatabaseHandle):
         '''
         self.cursor.executemany(query, veh_evts)
         self.connection.commit()
+    
+    def create_leg_events(self):
+        query = f'''
+            CREATE TABLE leg_events
+            AS SELECT
+                xele.vehicle_id AS vehicle_id,
+                links.link_id AS link_id,
+                COUNT(*) - 1 AS leg_index,
+                xele.time AS time,
+                xele.enter AS enter
+            FROM xml_events_leg_events AS xele
+            LEFT JOIN links
+            ON xple.link_str = links.link_str
+            LEFT JOIN xml_events_leg_events AS xele1
+            ON xele.vehicle_id = xele1.vehicle_id
+                AND xele.time >= xele1.time
+            GROUP BY
+                xele.vehicle_id
+            ORDER BY
+                xele.vehicle_id,
+                xele.leg_index
+        '''
+        self.cursor.execute(query)
+        self.cursor.commit()

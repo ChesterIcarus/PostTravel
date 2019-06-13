@@ -5,7 +5,7 @@
             "user": "validation",
             "host": "localhost",
             "db": "icarus_postsim",
-            "unix_socket": "/var/lib/mysql/mysql.sock",
+            "unix_socket": "/home/mysql/mysql.sock",
             "password": "",
             "tables": {
                 "xml_events_leg_events": {

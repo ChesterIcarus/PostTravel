@@ -39,6 +39,7 @@ class PlansParser:
         leg = 0
 
         # other important info
+        selected = False
         distance = 0
         time = 0
         modes = set()
@@ -48,8 +49,13 @@ class PlansParser:
             if evt == 'start':
                 if elem.tag == 'person':
                     agent = int(elem.attrib['id'])
-            elif evt == 'end':
-                if elem.tag == 'person':
+                if elem.tag == 'plan':
+                    if elem.attrib['selected'] != 'yes':
+                        selected = False
+                    else:
+                        selected = True
+            elif evt == 'end' and selected:
+                if elem.tag == 'plan':
                     plans.append([                  # PLANS
                         agent,                      # agent_id
                         route + activity,           # size

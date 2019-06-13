@@ -45,11 +45,14 @@ class EventsParser:
                     if bin_count >= bin_size:
                         root.clear()
                         bin_count = 0
+                        if not silent:
+                            self.print(f'Skipped to event {total_count}.')
                     if total_count == offset:
                         root.clear()
                         bin_count = 0
                         update = False
                         if not silent:
+                            self.print(f'Skipped to event {total_count}.')
                             self.print('Event skipping complete.')
                             self.print('Resuming XML leg/vehicle event parsing')
                     continue
@@ -87,6 +90,7 @@ class EventsParser:
                     ))
                     bin_count += 1
                 if bin_count >= bin_size:
+                    total_count += bin_count
                     if not silent:
                         self.print(f'Pushing {bin_count} events to SQL database.')
                     self.database.write_leg_evts(leg_evts)
@@ -99,13 +103,14 @@ class EventsParser:
                     bin_count = 0
                     if not silent:
                         self.print(f'Resuming XML leg/vehicle event parsing.')
-
+        total_count += bin_count
         if not silent:
             self.print(f'Pushing {bin_count} events to SQL database.')
         self.database.write_leg_evts(leg_evts)
         self.database.write_veh_evts(veh_evts)
         if not silent:
             self.print('XML leg/vehicle event parsing complete.')
+            self.print(f'A total of {total_count} events have been pushed.')
 
     def print(self, string):
         time = datetime.now()

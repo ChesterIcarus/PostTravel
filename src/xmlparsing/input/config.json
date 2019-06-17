@@ -1,0 +1,89 @@
+{
+    "WORKSTATION": {
+        "source_path": "/home/Shared/icarus_data/MATsim_input/full_matsim_plans_from_mag.xml",
+        "database": {
+            "user": "root",
+            "host": "localhost",
+            "db": "icarus_presim",
+            "unix_socket": "/home/mysql/mysql.sock",
+            "password": "",
+            "tables": {
+                "plans": {
+                    "schema": [
+                        "agent_id INT UNSIGNED",
+                        "size MEDIUMINT UNSIGNED",
+                        "mode_count TINYINT UNSIGNED" 
+                    ],
+                    "comp_PK": [
+                        "agent_id"
+                    ]
+                },
+                "activities": {
+                    "schema": [
+                        "agent_id INT UNSIGNED",
+                        "act_index MEDIUMINT UNSIGNED",
+                        "start_time MEDIUMINT UNSIGNED",
+                        "end_time MEDIUMINT UNSIGNED",
+                        "act_type MEDIUMINT UNSIGNED"
+                    ],
+                    "comp_PK": [
+                        "agent_id",
+                        "act_index"
+                    ]
+                },
+                "routes": {
+                    "schema": [
+                        "agent_id INT UNSIGNED",
+                        "route_index MEDIUMINT UNSIGNED",
+                        "dep_time INT UNSIGNED",
+                        "dur_time INT UNSIGNED",
+                        "mode TINYINT UNSIGNED"
+                    ],
+                    "comp_PK": [
+                        "agent_id",
+                        "route_index"
+                    ]
+                }
+            }
+        },
+        "encoding": {
+            "mode": {
+                "car": 0,
+                "sov": 1,
+                "hov2_driver": 2,
+                "hov3_driver": 3,
+                "hov_passenger": 4,
+                "conv_transit_walk_access": 5,
+                "conv_transit_knr": 6,
+                "conv_transit_pnr": 7,
+                "prem_transit_walk_access": 8,
+                "prem_transit_knr": 9,
+                "prem_transit_pnr": 10,
+                "walk": 11,
+                "bike": 12,
+                "taxi": 13,
+                "school_bus": 14
+            },
+            "activity": {
+                "home": 0,
+                "work": 1,
+                "university": 2,
+                "school": 3,
+                "pure_escort": 411,
+                "rideshare": 412,
+                "other_escort": 42,
+                "shopping": 5,
+                "other_maintenence": 6,
+                "ride_share": 4,
+                "food": 7,
+                "breakfast": 71,
+                "lunch": 72,
+                "dinner": 73,
+                "visiting": 8,
+                "other_discretionary": 9,
+                "special_event": 10,
+                "work_related": 15
+            }
+        }
+    }
+}

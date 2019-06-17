@@ -31,6 +31,8 @@ class PlansParser:
         plans = []
         activities = []
         routes = []
+        plan_acts = []
+        plan_routes = []
 
         # indexes
         agent = 0
@@ -41,7 +43,6 @@ class PlansParser:
         # other important info
         selected = False
         distance = 0
-        time = 0
         modes = set()
 
         # ireate over XML tags
@@ -62,6 +63,20 @@ class PlansParser:
                         len(modes)                  # mode_count
                     ])
 
+                    plan_acts.sort(key=lambda l:l[3])
+                    plan_routes.sort(key=lambda l:l[0])
+
+                    for i in range(len(plan_acts)):
+                        plan_acts[i][1] = i
+                    for i in range(len(plan_routes)):
+                        del plan_routes[i][0]
+                        plan_routes[i][1] = i
+
+                    activities.extend(plan_acts)
+                    routes.extend(plan_routes)
+
+                    plan_acts = []
+                    plan_routes = []
                     modes = set()
                     route = 0
                     activity = 0
@@ -88,32 +103,31 @@ class PlansParser:
                     end_time = self.parse_time(elem.attrib['end_time'])
                     act_type = self.encoding['activity'][elem.attrib['type']]
 
-                    activities.append([             # ACTIVITIES
+                    plan_acts.append([              # ACTIVITIES
                         agent,                      # agent_id
-                        activity,                   # act_index
-                        time,                       # start_time
+                        None,                       # act_index
+                        None,                       # start_time
                         end_time,                   # end_time
                         act_type                    # act_type
                     ])
-
-                    time = end_time
                     activity += 1
 
                 elif elem.tag == 'leg':
+                    stime = self.parse_time(elem.attrib['dep_time'])
                     dtime = self.parse_time(elem.attrib['trav_time'])
                     mode = self.encoding['mode'][elem.attrib['mode']]
                     modes.add(mode)
 
-                    routes.append([                 # ROUTES
+                    plan_routes.append([            # ROUTES
+                        stime,                      # start_time - TEMP
                         agent,                      # agent_id
-                        route,                      # route_index
+                        None,                       # route_index
                         leg,                        # size
                         dtime,                      # time
                         distance,                   # distance
                         mode                        # mode
                     ])
 
-                    time += dtime
                     route += 1
 
                 elif elem.tag == 'route':
@@ -121,7 +135,7 @@ class PlansParser:
                     leg = len(elem.text.split(" "))
         
         if not silent:
-            self.print(f'Pushing {bin_count} legs to SQL server.')
+            self.print(f'Pushing {bin_count} plans to SQL server.')
 
         self.database.write_plans(plans)
         self.database.write_activities(activities)

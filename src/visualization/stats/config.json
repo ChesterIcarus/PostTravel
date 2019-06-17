@@ -1,0 +1,11 @@
+{
+    "WORKSTATION": {
+        "database": {
+            "user": "validation",
+            "host": "localhost",
+            "db": "icarus_postsim",
+            "unix_socket": "/home/mysql/mysql.sock",
+            "password": ""
+        }
+    }
+}

@@ -1,5 +1,6 @@
 from typing import List, Dict, Tuple
-from xml.etree.ElementTree import iterparse
+from xml.etree import ElementTree as etree
+# from xml.etree.ElementTree import iterparse
 from collections import namedtuple
 import numpy as np
 
@@ -11,7 +12,7 @@ Link = namedtuple('Link', ['id_',
                            'length',
                            'freespeed',
                            'capacity',
-                           'permenant_lanes',
+                           'permlanes',
                            'oneway',
                            'modes'])
 
@@ -44,13 +45,13 @@ class NetworkParser:
 
                 if elem.tag == 'link':
                     links.append(
-                        Link(int(elem.attrib['id']),
+                        Link(str(elem.attrib['id']),
                              int(elem.attrib['from']),
                              int(elem.attrib['to']),
                              float(elem.attrib['length']),
                              float(elem.attrib['freespeed']),
                              float(elem.attrib['capacity']),
-                             float(elemt.attrib['permenant_lanes']),
+                             float(elem.attrib['permlanes']),
                              bool(int(elem.attrib['oneway'])),
                              str(elem.attrib['modes'])))
 

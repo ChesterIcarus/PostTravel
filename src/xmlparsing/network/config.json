@@ -46,20 +46,20 @@
                 },
                 "network_links": {
                     "schema": [
-                        "link_id INT UNSIGNED",
-                        "source_node INT UNSIGNED",
-                        "terminal_node INT UNSIGNED",
+                        "link_id VARCHAR(300)",
+                        "source_node BIGINT UNSIGNED",
+                        "terminal_node BIGINT UNSIGNED",
                         "length DOUBLE",
                         "freespeed DOUBLE",
                         "capacity DOUBLE",
-                        "permenant_lanes DOUBLE",
+                        "permlanes DOUBLE",
                         "oneway BOOL",
                         "modes VARCHAR(200)"
                     ]
                 },
                 "network_nodes": {
                     "schema": [
-                        "node_id INT UNSIGNED",
+                        "node_id BIGINT UNSIGNED",
                         "x_coord DOUBLE",
                         "y_coord DOUBLE"
                     ]

@@ -1,0 +1,70 @@
+{
+    "WORKSTATION": {
+        "source_path": "/home/Shared/icarus_data/MATsim_input/full_matsim_plans_from_mag.xml",
+        "database": {
+            "user": "root",
+            "host": "localhost",
+            "db": "icarus_postsim",
+            "unix_socket": "/home/mysql/mysql.sock",
+            "password": "",
+            "tables": {
+                "plans": {
+                    "schema": [
+                        "agent_id INT UNSIGNED",
+                        "size MEDIUMINT UNSIGNED",
+                        "mode_count TINYINT UNSIGNED"
+                    ],
+                    "comp_PK": [
+                        "agent_id"
+                    ]
+                },
+                "activities": {
+                    "schema": [
+                        "agent_id INT UNSIGNED",
+                        "act_index MEDIUMINT UNSIGNED",
+                        "start_time MEDIUMINT UNSIGNED",
+                        "end_time MEDIUMINT UNSIGNED",
+                        "act_type MEDIUMINT UNSIGNED"
+                    ],
+                    "comp_PK": [
+                        "agent_id",
+                        "act_index"
+                    ]
+                },
+                "routes": {
+                    "schema": [
+                        "agent_id INT UNSIGNED",
+                        "route_index MEDIUMINT UNSIGNED",
+                        "dep_time INT UNSIGNED",
+                        "dur_time INT UNSIGNED",
+                        "mode TINYINT UNSIGNED"
+                    ],
+                    "comp_PK": [
+                        "agent_id",
+                        "route_index"
+                    ]
+                },
+                "network_links": {
+                    "schema": [
+                        "link_id INT UNSIGNED",
+                        "source_node INT UNSIGNED",
+                        "terminal_node INT UNSIGNED",
+                        "length DOUBLE",
+                        "freespeed DOUBLE",
+                        "capacity DOUBLE",
+                        "permenant_lanes DOUBLE",
+                        "oneway BOOL",
+                        "modes VARCHAR(200)"
+                    ]
+                },
+                "network_nodes": {
+                    "schema": [
+                        "node_id INT UNSIGNED",
+                        "x_coord DOUBLE",
+                        "y_coord DOUBLE"
+                    ]
+                }
+            }
+        }
+    }
+}

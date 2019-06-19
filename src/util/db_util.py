@@ -24,7 +24,8 @@ class DatabaseHandle:
                 self.cursor = self.connection.cursor()
                 self.user = params['user']
                 self.host = params['host']
-                self.db = params['db']
+                if 'db' in params:
+                    self.db = params['db']
             except Exception as ex:
                 # Creating the database that didn't exist, if that was the error above
                 connection: sql.connections.Connection

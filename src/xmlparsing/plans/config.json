@@ -36,7 +36,8 @@
                         "agent_id INT UNSIGNED",
                         "route_index MEDIUMINT UNSIGNED",
                         "size MEDIUMINT UNSIGNED",
-                        "time INT UNSIGNED",
+                        "dep_time INT UNSIGNED",
+                        "dur_time INT UNSIGNED",
                         "distance FLOAT",
                         "mode TINYINT UNSIGNED"
                     ],

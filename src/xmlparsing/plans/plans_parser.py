@@ -1,9 +1,12 @@
-from typing import List, Dict, Tuple
-from xml.etree.ElementTree import iterparse
+from bisect import bisect_left
 from datetime import datetime
+from typing import Dict, List, Tuple
+from xml.etree.ElementTree import iterparse
+
 import numpy as np
 
 from xmlparsing.plans.plansparse_db_util import PlansDatabaseHandle
+
 
 class PlansParser:
     database: PlansDatabaseHandle = None
@@ -51,30 +54,33 @@ class PlansParser:
                 if elem.tag == 'person':
                     agent = int(elem.attrib['id'])
                 if elem.tag == 'plan':
-                    if elem.attrib['selected'] != 'yes':
-                        selected = False
-                    else:
-                        selected = True
+                    selected = True if elem.attrib['selected'] == 'yes' else False
             elif evt == 'end' and selected:
                 if elem.tag == 'plan':
-                    plans.append([                  # PLANS
-                        agent,                      # agent_id
-                        route + activity,           # size
-                        len(modes)                  # mode_count
+                    plans.append([                      # PLANS
+                        agent,                          # agent_id
+                        route + activity,               # size
+                        len(modes)                      # mode_count
                     ])
 
+                    # sort activities and routes chronologically
                     plan_acts.sort(key=lambda l:l[3])
-                    plan_routes.sort(key=lambda l:l[0])
+                    plan_routes.sort(key=lambda l:l[3])
 
+                    # add indexes; fill in missing times
+                    times = []
+                    for i in range(len(plan_routes)):
+                        plan_routes[i][1] = i
+                        times.append(plan_routes[i][3] + plan_routes[i][4])
+                    sorted(times)
                     for i in range(len(plan_acts)):
                         plan_acts[i][1] = i
-                    for i in range(len(plan_routes)):
-                        del plan_routes[i][0]
-                        plan_routes[i][1] = i
+                        plan_acts[i][2] = times[bisect_left(times, plan_acts[i][3])]
 
                     activities.extend(plan_acts)
                     routes.extend(plan_routes)
 
+                    # free memory
                     plan_acts = []
                     plan_routes = []
                     modes = set()
@@ -93,6 +99,7 @@ class PlansParser:
                         if not silent:
                             self.print('Resuming XML agent plan parsing.')
 
+                        # free memory
                         root.clear()
                         plans = []
                         activities = []
@@ -110,20 +117,21 @@ class PlansParser:
                         end_time,                   # end_time
                         act_type                    # act_type
                     ])
+                    
                     activity += 1
 
                 elif elem.tag == 'leg':
-                    stime = self.parse_time(elem.attrib['dep_time'])
-                    dtime = self.parse_time(elem.attrib['trav_time'])
+                    dep_time = self.parse_time(elem.attrib['dep_time'])
+                    dur_time = self.parse_time(elem.attrib['trav_time'])
                     mode = self.encoding['mode'][elem.attrib['mode']]
                     modes.add(mode)
 
                     plan_routes.append([            # ROUTES
-                        stime,                      # start_time - TEMP
                         agent,                      # agent_id
                         None,                       # route_index
                         leg,                        # size
-                        dtime,                      # time
+                        dep_time,                   # dep_time
+                        dur_time,                   # dur_time
                         distance,                   # distance
                         mode                        # mode
                     ])
@@ -143,12 +151,8 @@ class PlansParser:
         
         if not silent:
             self.print('Completed XML agent plan parsing.')
-
-        root.clear()
-        plans = []
-        activities = []
-        routes = []
     
+
     def parse_time(self, clk):
         clk = clk.split(':')
         return int(clk[0]) * 3600 + int(clk[1]) * 60 + int(clk[2])

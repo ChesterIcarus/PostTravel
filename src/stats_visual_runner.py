@@ -1,7 +1,7 @@
 import json
 from getpass import getpass
 
-from visualization.stats.stats import StatsVisual
+from visualization.charts.charts import ChartsVisualization
 
 CONFIG = 'WORKSTATION'
 
@@ -13,5 +13,5 @@ params = params[CONFIG]
 params['database']['password'] = getpass(
     f'Password for {params["database"]["user"]}: ')
 
-visualizer = StatsVisual(params['database'])
-visualizer.activity(silent=False)
+visualizer = ChartsVisualization(params['database'])
+

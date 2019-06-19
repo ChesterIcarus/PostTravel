@@ -1,6 +1,6 @@
 {
     "WORKSTATION": {
-        "source_path": "/home/Shared/icarus_data/MATsim_input/full_matsim_plans_from_mag.xml",
+        "source_path": "/home/Shared/icarus_data/MATsim_output/output_network.xml",
         "database": {
             "user": "root",
             "host": "localhost",

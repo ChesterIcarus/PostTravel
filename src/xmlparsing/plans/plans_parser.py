@@ -1,4 +1,4 @@
-from bisect import bisect_left
+from bisect import bisect_left, insort
 from datetime import datetime
 from typing import Dict, List, Tuple
 from xml.etree.ElementTree import iterparse
@@ -46,6 +46,8 @@ class PlansParser:
         # other important info
         selected = False
         distance = 0
+        time = 0
+        day = 0
         modes = set()
 
         # ireate over XML tags
@@ -63,29 +65,12 @@ class PlansParser:
                         len(modes)                      # mode_count
                     ])
 
-                    # sort activities and routes chronologically
-                    plan_acts.sort(key=lambda l:l[3])
-                    plan_routes.sort(key=lambda l:l[3])
-
-                    # add indexes; fill in missing times
-                    times = []
-                    for i in range(len(plan_routes)):
-                        plan_routes[i][1] = i
-                        times.append(plan_routes[i][3] + plan_routes[i][4])
-                    sorted(times)
-                    for i in range(len(plan_acts)):
-                        plan_acts[i][1] = i
-                        plan_acts[i][2] = times[bisect_left(times, plan_acts[i][3])]
-
-                    activities.extend(plan_acts)
-                    routes.extend(plan_routes)
-
-                    # free memory
-                    plan_acts = []
-                    plan_routes = []
+                    # reset and free memory
                     modes = set()
                     route = 0
                     activity = 0
+                    time = 0
+                    day = 0
                     bin_count += 1
 
                     if bin_count >= bin_size:
@@ -99,7 +84,7 @@ class PlansParser:
                         if not silent:
                             self.print('Resuming XML agent plan parsing.')
 
-                        # free memory
+                        # reset and free memory
                         root.clear()
                         plans = []
                         activities = []
@@ -110,14 +95,19 @@ class PlansParser:
                     end_time = self.parse_time(elem.attrib['end_time'])
                     act_type = self.encoding['activity'][elem.attrib['type']]
 
-                    plan_acts.append([              # ACTIVITIES
+                    # if end_time < time:
+                    #     day += 1
+                    #     end_time += 86400 * day
+
+                    activities.append([              # ACTIVITIES
                         agent,                      # agent_id
-                        None,                       # act_index
-                        None,                       # start_time
+                        activity,                   # act_index
+                        time,                       # start_time
                         end_time,                   # end_time
                         act_type                    # act_type
                     ])
-                    
+
+                    time = end_time
                     activity += 1
 
                 elif elem.tag == 'leg':
@@ -126,9 +116,13 @@ class PlansParser:
                     mode = self.encoding['mode'][elem.attrib['mode']]
                     modes.add(mode)
 
-                    plan_routes.append([            # ROUTES
+                    # if dep_time < time:
+                    #     day += 1
+                    #     dep_time += 86400 * day
+
+                    routes.append([            # ROUTES
                         agent,                      # agent_id
-                        None,                       # route_index
+                        route,                      # route_index
                         leg,                        # size
                         dep_time,                   # dep_time
                         dur_time,                   # dur_time
@@ -136,6 +130,7 @@ class PlansParser:
                         mode                        # mode
                     ])
 
+                    time = dep_time + dur_time
                     route += 1
 
                 elif elem.tag == 'route':

@@ -1,6 +1,6 @@
 {
     "WORKSTATION": {
-        "output_path": "~/scripts/PostTravel/data",
+        "save_path": "/home/bbrownlee/scripts/PostTravel/data/charts/",
         "database": {
             "user": "validation",
             "host": "localhost",
@@ -8,7 +8,7 @@
             "password": ""
         },
         "graphs": {
-            "route_duration": 0,
+            "route_duration": 1,
             "agents_traveling": 0,
             "route_departures": 0,
             "route_arrivals": 0,

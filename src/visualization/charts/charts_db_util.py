@@ -24,6 +24,16 @@ class ChartsDatabseHandle(DatabaseHandle):
         self.cursor.execute(query)
         return int(self.cursor.fetchall()[0][0])
 
+    def fetch_count_cond(self, db, tbl, col, cond):
+        query = f'''
+            SELECT
+                COUNT(*)
+            FROM {db}.{tbl}
+            WHERE {col} = {cond}
+        '''
+        self.cursor.execute(query)
+        return int(self.cursor.fetchall()[0][0])
+
     def fetch_bin(self, db, tbl, col, 
                   bin_size=-3, bin_offset=0, bin_count=100):
         query = f'''
@@ -31,6 +41,22 @@ class ChartsDatabseHandle(DatabaseHandle):
                 ROUND({col}, {bin_size}) AS bin,
                 COUNT(*) AS freq
             FROM {db}.{tbl}
+            GROUP BY bin
+            LIMIT {bin_offset}, {bin_offset + bin_count}
+        '''
+        self.cursor.execute(query)
+        rslt = self.cursor.fetchall()
+        rslt = list(zip(*rslt))
+        return [int(x) for x in rslt[0]], [int(x) for x in rslt[1]]
+
+    def fetch_bin_cond(self, db, tbl, col1, col2, cond,
+                       bin_size=-3, bin_offset=0, bin_count=100):
+        query = f'''
+            SELECT
+                ROUND({col1}, {bin_size}) AS bin,
+                COUNT(*) AS freq
+            FROM {db}.{tbl}
+            WHERE {col2} = {cond}
             GROUP BY bin
             LIMIT {bin_offset}, {bin_offset + bin_count}
         '''
@@ -65,3 +91,14 @@ class ChartsDatabseHandle(DatabaseHandle):
         rslt = self.cursor.fetchall()
         rslt = list(zip(*rslt))
         return [int(x) for x in rslt[0]], [int(x) for x in rslt[1]]
+
+'''
+SELECT
+    ROUND(end_time, -4) AS bin,
+    COUNT(*) AS freq,
+    RPAD('', COUNT(*) / 100000, '*') AS bar
+FROM icarus_presim.activities
+WHERE act_type = 1
+GROUP BY bin
+LIMIT 40;
+'''

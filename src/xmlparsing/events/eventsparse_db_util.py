@@ -58,8 +58,8 @@ class EventsDatabaseHandle(DatabaseHandle):
                 xele.time AS time,
                 xele.enter AS enter
             FROM xml_events_leg_events AS xele
-            LEFT JOIN links
-            ON xple.link_str = links.link_str
+            LEFT JOIN network_links AS links
+            ON xele.link_str = links.link_str
             LEFT JOIN xml_events_leg_events AS xele1
             ON xele.vehicle_id = xele1.vehicle_id
                 AND xele.time >= xele1.time

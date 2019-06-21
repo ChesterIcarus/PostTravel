@@ -8,8 +8,10 @@
             "password": ""
         },
         "graphs": {
-            "route_duration": 1,
+            "route_duration": 0,
             "agents_traveling": 0,
+            "work_start": 1,
+            "work_end": 0,
             "route_departures": 0,
             "route_arrivals": 0,
             "link_flow": 0

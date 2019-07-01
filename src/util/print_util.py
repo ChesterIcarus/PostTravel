@@ -1,35 +1,70 @@
 
+import math
+import os
+import time
 from datetime import datetime
-from time import sleep
 
-class ProgressBar:
+
+class Printer:
+    persist_str = ''
+    persist_rows = 0
+
+    @staticmethod
+    def test():
+        Printer.print('Beginning printer test.')
+        time.sleep(1)
+        Printer.print(Printer.time('This should have a timestamp.'))
+        time.sleep(1)
+        Printer.print('I will stay at the bottom.', persist='True')
+        time.sleep(1)
+        Printer.print('Even when something else is added.')
+        time.sleep(1)
+        Printer.print('But it can be updated.')
+        Printer.print('As seen here.', persist=True, replace=True)
     
     @staticmethod
-    def tester():
-        progbar = ProgressBar('Progress Bar Test ', 0, 100)
-        for i in range(101):
-            sleep(0.1)
-            progbar.update(i)
-        progbar.close()
+    def progress(prog, target=1, string = ''):
+        perc = 100 * prog / target
+        bar = ( string + ' [' + 
+                '=' * int(perc // 5) + 
+                ' ' * int(20 - perc // 5) + 
+                '] ' + str(round(perc, 1)) + '%')
+        print(bar, end='\r', flush=True)
+        if perc >= 100:
+            print()
 
-    def __init__(self, string, start, end, bin=20):
-        self.string = string
-        self.start = start
-        self.end = end
-        self.bin = 20
+    @staticmethod
+    def clear(rows=None):
+        if rows is None:
+            rows, cols = os.popen('stty size', 'r').read().split()
+            rows = int(rows)
+        print('\n'*(rows-1) + '\033[F'*rows, end='')
 
-    def update(self, value):
-        prog = value * self.bin // (self.end - self.start)
-        togo = self.bin - prog
-        perc = str(min(value / self.end * 100, 100))[:3] + '%'
-        bar = self.string + '[' + '=' * prog + ' ' * togo + '] ' + perc
-        bar = '\b' * len(bar) + bar
-        print(bar, end='', flush=True)
-        if perc == '100%':
-            self.close()
+    @staticmethod
+    def delete(rows=None):
+        pass
 
-    def close(self):
-        print()
+    @staticmethod
+    def print(string, persist=False, replace=False):
+        rows, cols = os.popen('stty size', 'r').read().split()
+        cols = int(cols)
+        rows = int(rows)
+        print(('\033[F'+' '*cols)*Printer.persist_rows, end='\r')
+        if persist:
+            if not replace and Printer.persist_rows:
+                string = Printer.persist_str + '\n' + string
+            print(string, end='')
+            Printer.persist_rows = sum([math.ceil(len(row) / cols) 
+                for row in string.split('\n')])
+            Printer.persist_str = string
+        else:
+            print(string)
+            if Printer.persist_rows:
+                print(Printer.persist_str, end='')        
     
-class Timestamp:
-    pass
+    @staticmethod
+    def time(string):
+        date = datetime.now()
+        return ('[' + date.strftime('%H:%M:%S:') + 
+            str(date.microsecond // 1000).zfill(3) +
+            '] ' + string)

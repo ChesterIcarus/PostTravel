@@ -15,7 +15,8 @@ params['database']['password'] = getpass(
 
 parser = EventsParser(params['database'])
 
-# for table in params['database']['tables'].keys():
-#     parser.database.create_table(table, True)
+if not params['update']:
+    for table in params['database']['tables'].keys():
+        parser.database.create_table(table, True)
 
-parser.parse(params['source_path'], silent=False, update=True)
+parser.parse(params['source_path'], update=params['update'])

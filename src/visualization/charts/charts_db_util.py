@@ -1,6 +1,7 @@
 from util.db_util import DatabaseHandle
 
 class ChartsDatabseHandle(DatabaseHandle):
+
     def fetch_stats(self, db, tbl, col, group=[]):
         query = f'''
             SELECT
@@ -29,7 +30,7 @@ class ChartsDatabseHandle(DatabaseHandle):
             SELECT
                 COUNT(*)
             FROM {db}.{tbl}
-            WHERE {col} = {cond}
+            WHERE {col} IN {cond}
         '''
         self.cursor.execute(query)
         return int(self.cursor.fetchall()[0][0])
@@ -56,7 +57,7 @@ class ChartsDatabseHandle(DatabaseHandle):
                 ROUND({col1}, {bin_size}) AS bin,
                 COUNT(*) AS freq
             FROM {db}.{tbl}
-            WHERE {col2} = {cond}
+            WHERE {col2} IN {cond}
             GROUP BY bin
             LIMIT {bin_offset}, {bin_offset + bin_count}
         '''
@@ -77,7 +78,7 @@ class ChartsDatabseHandle(DatabaseHandle):
                     COUNT(*) AS freq
                 FROM {db}.{tbl}
                 GROUP BY bin
-                UNION
+                UNION ALL
                 SELECT
                     ROUND({col2}, {bin_size}) AS bin,
                     COUNT(*) * -1 AS freq
@@ -91,14 +92,3 @@ class ChartsDatabseHandle(DatabaseHandle):
         rslt = self.cursor.fetchall()
         rslt = list(zip(*rslt))
         return [int(x) for x in rslt[0]], [int(x) for x in rslt[1]]
-
-'''
-SELECT
-    ROUND(end_time, -4) AS bin,
-    COUNT(*) AS freq,
-    RPAD('', COUNT(*) / 100000, '*') AS bar
-FROM icarus_presim.activities
-WHERE act_type = 1
-GROUP BY bin
-LIMIT 40;
-'''

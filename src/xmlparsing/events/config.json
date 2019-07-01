@@ -8,16 +8,20 @@
             "unix_socket": "/home/mysql/mysql.sock",
             "password": "",
             "tables": {
-                "xml_events_leg_events": {
+                "leg_events": {
                     "schema": [
+                        "event_id INT UNSIGNED",
                         "vehicle_id INT UNSIGNED",
-                        "link_str VARCHAR(250)",
+                        "event_index INT UNSIGNED",
+                        "link_id INT UNSIGNED",
+                        "link_str VARCHAR(300)",
                         "`time` MEDIUMINT UNSIGNED",
                         "enter TINYINT(1)"
                     ]
                 },
                 "vehicle_events": {
                     "schema": [
+                        "event_id INT UNSIGNED",
                         "vehicle_id INT UNSIGNED",
                         "agent_id INT UNSIGNED",
                         "`time` MEDIUMINT UNSIGNED",
@@ -25,6 +29,7 @@
                     ]
                 }
             }
-        }
+        },
+        "update": false
     }
 }

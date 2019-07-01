@@ -29,7 +29,15 @@ class ChartsVisualization:
         time = datetime.now()
         return print('[' + time.strftime('%H:%M:%S:') + 
             ('000' + str(time.microsecond // 1000))[-3:] +
-            ']\t' + string)
+            '] ' + string)
+
+    def align_bins(self, bin1, bin2, val1, val2):
+        bins = list(set(bin1 + bin2))
+        val1 = [0] * bins.index(bin1[0]) + val1
+        val1 = val1 + [0] * (len(bins) - len(val1))
+        val2 = [0] * bins.index(bin2[0]) + val2
+        val2 = val2 + [0] * (len(bins) - len(val2))
+        return bins, val1, val2
 
     def route_duration(self, savepath, silent=False):
         if not silent:
@@ -45,12 +53,10 @@ class ChartsVisualization:
         if not silent:
             self.print('Graphing route duration data.')
 
-        bins = mag_bin if len(mag_bin) > len(mat_bin) else mat_bin
+        bins, mag_freq, mat_freq = self.align_bins(mag_bin, mat_bin, mag_freq, mat_freq)
         pos = np.arange(len(bins))
         mag_freq = [100 * x / mag_tot for x in mag_freq]
         mat_freq = [100 * x / mat_tot for x in mat_freq]
-        mag_freq += [0]*(len(bins) - len(mag_bin))
-        mat_freq += [0]*(len(bins) - len(mat_bin))
         width = 0.45
 
         plt.bar(pos + width / 2, mag_freq, width=width, color='b', label='MAG ABM')
@@ -99,34 +105,31 @@ class ChartsVisualization:
         plt.savefig(savepath + 'agents_traveling.png', dpi=1200, bbox_inches='tight')
         plt.clf()
 
+    def activity_events(self, savepath, act_type=[], attr='', savename='', silent=False):
+        pass
+
     def work_start(self, savepath, silent=False):
         if not silent:
             self.print('Fetching agent work start data.')
 
         mag_bin, mag_freq = self.database.fetch_bin_cond(
-            'icarus_presim', 'activities', 'start_time', 'act_type', 1,
+            'icarus_presim', 'activities', 'start_time', 'act_type', (1,),
             bin_size=-4, bin_count=10)
         mat_bin, mat_freq = self.database.fetch_bin_cond(
-            'icarus_postsim', 'activities', 'start_time', 'act_type', 1,
+            'icarus_postsim', 'activities', 'start_time', 'act_type', (1,),
             bin_size=-4, bin_count=10)
         mag_tot = self.database.fetch_count_cond(
-            'icarus_presim', 'activities', 'act_type', 1)
+            'icarus_presim', 'activities', 'act_type', (1,))
         mat_tot = self.database.fetch_count_cond(
-            'icarus_postsim', 'activities', 'act_type', 1)
+            'icarus_postsim', 'activities', 'act_type', (1,))
 
         if not silent:
             self.print('Graphing agent work start data.')
 
-        # TEMP FIX DELETE ME
-        mat_bin = [0, 1000] + mat_bin
-        mat_freq = [0, 0] + mat_freq
-
-        bins = mag_bin if len(mag_bin) > len(mat_bin) else mat_bin
+        bins, mag_freq, mat_freq = self.align_bins(mag_bin, mat_bin, mag_freq, mat_freq)
         pos = np.arange(len(bins))
         mag_freq = [100 * x / mag_tot for x in mag_freq]
         mat_freq = [100 * x / mat_tot for x in mat_freq]
-        mag_freq += [0]*(len(bins) - len(mag_bin))
-        mat_freq += [0]*(len(bins) - len(mat_bin))
         width = 0.45
 
         plt.bar(pos + width / 2, mag_freq, width=width, color='b', label='MAG ABM')
@@ -148,25 +151,23 @@ class ChartsVisualization:
             self.print('Fetching agent work end data.')
 
         mag_bin, mag_freq = self.database.fetch_bin_cond(
-            'icarus_presim', 'activities', 'end_time', 'act_type', 1,
+            'icarus_presim', 'activities', 'end_time', 'act_type', (1,),
             bin_size=-4, bin_count=15)
         mat_bin, mat_freq = self.database.fetch_bin_cond(
-            'icarus_postsim', 'activities', 'end_time', 'act_type', 1,
+            'icarus_postsim', 'activities', 'end_time', 'act_type', (1,),
             bin_size=-4, bin_count=15)
         mag_tot = self.database.fetch_count_cond(
-            'icarus_presim', 'activities', 'act_type', 1)
+            'icarus_presim', 'activities', 'act_type', (1,))
         mat_tot = self.database.fetch_count_cond(
-            'icarus_postsim', 'activities', 'act_type', 1)
+            'icarus_postsim', 'activities', 'act_type', (1,))
 
         if not silent:
             self.print('Graphing agent work start data.')
 
-        bins = mag_bin if len(mag_bin) > len(mat_bin) else mat_bin
+        bins, mag_freq, mat_freq = self.align_bins(mag_bin, mat_bin, mag_freq, mat_freq)
         pos = np.arange(len(bins))
         mag_freq = [100 * x / mag_tot for x in mag_freq]
         mat_freq = [100 * x / mat_tot for x in mat_freq]
-        mag_freq += [0]*(len(bins) - len(mag_bin))
-        mat_freq += [0]*(len(bins) - len(mat_bin))
         width = 0.45
 
         plt.bar(pos + width / 2, mag_freq, width=width, color='b', label='MAG ABM')
@@ -183,14 +184,5 @@ class ChartsVisualization:
         plt.savefig(savepath + 'work_end.png', dpi=1200, bbox_inches='tight')
         plt.clf()
 
-    def route_activity(self, savepath, silent=False):
-        pass
-
-    def route_arrivals(self, savepath, silent=False):
-        pass
-    
-    def route_departures(self, savepath, silent=False):
-        pass            
-
-    def distrib(self, silent=False):
+    def link_flow(self, savepath, silent=False):
         pass

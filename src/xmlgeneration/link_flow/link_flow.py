@@ -14,8 +14,8 @@ class LinkFlow:
         
         elems: List = []
         bins: List = []
-        nodes: Tuple = None
-        links: Dict = None
+        nodes: Tuple = ()
+        links: Dict = {}
 
         if not silent:
             self.print(f'Beginning network link flow generation to {savepath}.')
@@ -32,7 +32,7 @@ class LinkFlow:
             self.print('Processing node data into formatted xml.')
         for node in nodes:
             elems.append(node_frmt % node)
-        nodes = tuple()
+        nodes = ()
         elems.append('</nodes>')
 
         if not silent:
@@ -44,7 +44,7 @@ class LinkFlow:
         if not silent:
             self.print('Fetching link network layout data.')
         network = self.database.fetch_links()
-        links = dict(((link[0], list(link) + [0]*bin_count) for link in network))
+        links = {link[0]: list(link) + [0]*bin_count for link in network}
 
         if not silent:
             self.print('Fetching leg binnning information.')
@@ -70,20 +70,31 @@ class LinkFlow:
             ''.join(['<attribute name="tbin' + str(i) + 
             '" class="java.lang.Integer">%d</attribute>' for i in range(bin_count)]) +
             '</attributes></link>')
-        for key in links:
-            elems.append(link_frmt % tuple(links[key]))
-        links = dict()
-        elems.append('</links>')
-        elems.append('</network>')
 
         if not silent:
-            self.print('Appending link data to xml file.')
+            self.print('Formatting and writing link data to xml.')
+
+        i = 0
         with open(savepath, 'a') as outfile:
+            for key in links:
+                elems.append(link_frmt % tuple(links[key]))
+                i += 1
+                if i >= 100000:
+                    outfile.write(''.join(elems))
+                    outfile.flush()
+                    elems = []
+                    i = 0
+            elems.append('</links>')
+            elems.append('</network>')
             outfile.write(''.join(elems))
-        elems = []
+            outfile.flush()
+            elems = []
+            links = {}
 
         if not silent:
             self.print('Network link flow data generation complete.')
+
+
 
     def print(self, string):
         time = datetime.now()

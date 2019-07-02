@@ -38,7 +38,7 @@ class Printer:
         if rows is None:
             rows, cols = os.popen('stty size', 'r').read().split()
             rows = int(rows)
-        print('\n'*(rows-1) + '\033[F'*rows, end='')
+        print('\n'*(rows-1) + '\033[F'*rows, end='\r')
 
     @staticmethod
     def delete(rows=None):
@@ -47,8 +47,8 @@ class Printer:
     @staticmethod
     def print(string, persist=False, replace=False):
         rows, cols = os.popen('stty size', 'r').read().split()
-        cols = int(cols)
         rows = int(rows)
+        cols = int(cols)
         print(('\033[F'+' '*cols)*Printer.persist_rows, end='\r')
         if persist:
             if not replace and Printer.persist_rows:

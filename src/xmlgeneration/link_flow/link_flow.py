@@ -95,7 +95,6 @@ class LinkFlow:
             self.print('Network link flow data generation complete.')
 
 
-
     def print(self, string):
         time = datetime.now()
         print('[' + time.strftime('%H:%M:%S:') + 

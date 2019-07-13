@@ -1,0 +1,23 @@
+{
+    "WORKSTATION": {
+        "network_path": "/home/bbrownlee/data/neighborhoods/sample_network0.xml",
+        "events_path": "/home/bbrownlee/data/neighborhoods/sample_events0.xml",
+        "coords": [
+            692672.785575,
+            878276.520395,
+            697189.154326,
+            884519.109210
+        ],
+        "time": [
+            0,
+            86400
+        ],
+        "database": {
+            "user": "validation",
+            "host": "localhost",
+            "db": "icarus_postsim",
+            "unix_socket": "/home/mysql/mysql.sock",
+            "password": ""
+        }
+    }
+}

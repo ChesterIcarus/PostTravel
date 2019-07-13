@@ -15,7 +15,7 @@ class Printer:
         time.sleep(1)
         Printer.print(Printer.time('This should have a timestamp.'))
         time.sleep(1)
-        Printer.print('I will stay at the bottom.', persist='True')
+        Printer.print('I will stay at the bottom.', persist=True)
         time.sleep(1)
         Printer.print('Even when something else is added.')
         time.sleep(1)
@@ -45,11 +45,13 @@ class Printer:
         pass
 
     @staticmethod
-    def print(string, persist=False, replace=False):
+    def print(string, persist=False, replace=False, time=False):
         rows, cols = os.popen('stty size', 'r').read().split()
         rows = int(rows)
         cols = int(cols)
         print(('\033[F'+' '*cols)*Printer.persist_rows, end='\r')
+        if time:
+            string = Printer.time(string)
         if persist:
             if not replace and Printer.persist_rows:
                 string = Printer.persist_str + '\n' + string

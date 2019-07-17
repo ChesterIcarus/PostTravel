@@ -15,4 +15,5 @@ params['database']['password'] = getpass(
 
 generator = LinkFlow(params['database'])
 
-generator.write_xml(params['save_path'], params['bins'])
+generator.write_xml(params['bins'], params['save_path'], 
+    params['coords'], params['time'])

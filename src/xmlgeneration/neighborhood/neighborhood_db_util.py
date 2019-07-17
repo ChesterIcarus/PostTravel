@@ -2,6 +2,18 @@
 from util.db_util import DatabaseHandle
 
 class NeighborhoodDatabaseHandle(DatabaseHandle):
+    def fetch_nodes(self, ids):
+        query = f'''
+            SELECT
+                node_id,
+                x_coord,
+                y_coord
+            FROM {self.db}.network_nodes
+            WHERE node_id IN {ids}
+        '''
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
+
     def find_nodes(self, xmin, ymin, xmax, ymax):
         query = f'''
             SELECT

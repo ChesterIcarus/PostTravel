@@ -1,7 +1,17 @@
 {
     "WORKSTATION": {
-        "save_path": "/home/bbrownlee/data/network_flow24.xml",
+        "save_path": "/home/bbrownlee/data/network_flow/network_flow24.xml",
         "bins": 24,
+        "coords": [
+            -193141.70819757727,
+            91471.48284134267,
+            1732020.2951595858,
+            2244557.67849661
+        ],
+        "time": [
+            0,
+            86400
+        ],
         "database": {
             "user": "validation",
             "host": "localhost",

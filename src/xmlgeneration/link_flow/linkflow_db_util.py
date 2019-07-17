@@ -1,33 +1,35 @@
 from util.db_util import DatabaseHandle
 
 class LinkFlowDatabaseHandle(DatabaseHandle):
-    def fetch_nodes(self):
+    def fetch_nodes(self, ids):
         query = f'''
-            SELECT *
+            SELECT
+                node_id,
+                x_coord,
+                y_coord
             FROM {self.db}.network_nodes
+            WHERE node_id IN {ids}
         '''
         self.cursor.execute(query)
         return self.cursor.fetchall()
-    
-    def fetch_bounds(self):
+
+    def find_nodes(self, xmin, ymin, xmax, ymax):
         query = f'''
             SELECT
-                MIN(min_time),
-                MAX(max_time)
-            FROM (
-                SELECT
-                    link_id,
-                    MIN(time) AS min_time,
-                    MAX(time) AS max_time
-                FROM {self.db}.leg_events
-                GROUP BY link_id
-            ) AS temp
+                node_id,
+                x_coord,
+                y_coord
+            FROM {self.db}.network_nodes
+            WHERE x_coord >= {xmin}
+            AND x_coord <= {xmax}
+            AND y_coord >= {ymin}
+            AND y_coord <= {ymax}
         '''
         self.cursor.execute(query)
-        result = self.cursor.fetchall()
-        return result[0][0], result[0][1]
+        return self.cursor.fetchall()
 
-    def fetch_links(self):
+
+    def find_links(self, nodes):
         query = f'''
             SELECT
                 link_id,
@@ -40,11 +42,13 @@ class LinkFlowDatabaseHandle(DatabaseHandle):
                 oneway,
                 modes
             FROM {self.db}.network_links
+            WHERE source_node IN {nodes}
+            OR terminal_node IN {nodes}
         '''
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
-    def fetch_link_times(self, tmin, tmax):
+    def fetch_link_times(self, tmin, tmax, links):
         query = f'''
             SELECT
                 link_id,
@@ -52,6 +56,7 @@ class LinkFlowDatabaseHandle(DatabaseHandle):
             FROM {self.db}.leg_events
             WHERE time > {tmin}
             AND time <= {tmax}
+            AND link_id IN {links}
             GROUP BY link_id
         '''
         self.cursor.execute(query)

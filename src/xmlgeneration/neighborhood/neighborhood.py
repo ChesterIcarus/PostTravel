@@ -10,7 +10,7 @@ class Neighborhood:
         self.database = NeighborhoodDatabaseHandle(database)
 
     def generate_neighborhood(self, network_path, events_path, 
-        coords, time, silent=False):
+            coords, time, silent=False):
 
         if not silent:
             pr.print('Beginning neighborhood simulation sampling.', time=True)
@@ -26,11 +26,18 @@ class Neighborhood:
         links = self.database.find_links(tuple(node[0] for node in nodes))
 
         if not silent:
+            pr.print('Fetching extraneous nodes from link sample.', time=True)  
+
+        node_ids = tuple(node for link in links for node in link[1:3])
+        nodes = self.database.fetch_nodes(node_ids)
+
+        if not silent:
             pr.print(f'Writing nodes and links to network file at ' 
                 f'{network_path}.', time=True)
 
         node_frmt = '<node id="%d" x="%d" y="%d"></node>'
-        link_frmt = ('<link id="%d" from="%d" to="%d" length="%d" freespeed="%d"'
+        link_frmt = (
+            '<link id="%d" from="%d" to="%d" length="%d" freespeed="%d"'
             ' capacity="%d" permlanes="%d" oneway="%d" modes="%s"></link>')
         n = 100000
         with open(network_path, 'w') as network:
@@ -51,7 +58,7 @@ class Neighborhood:
             pr.print(f'Finding events occuring on network from {time[0]}'
                 f' to {time[1]}.', time=True)
 
-        legs = self.database.find_events(tuple(link[0] for link in links), * time)
+        legs = self.database.find_events(tuple(link[0] for link in links), *time)
 
         if not silent:
             pr.print(f'Writing leg events to events file at {events_path}.', time=True)

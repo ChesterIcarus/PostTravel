@@ -139,7 +139,7 @@ class EventsParser:
         self.database.write_veh_evts(veh_evts)
         if not silent:
             self.print('XML leg/vehicle event parsing complete.')
-            self.print(f'A total of {total_count} events have been pushed.')
+            self.print(f'A total of {total_count} events were parsed.')
 
     def print(self, string):
         time = datetime.now()

@@ -2,6 +2,7 @@
 from datetime import datetime
 from typing import Dict, List, Tuple
 
+from util.print_util import Printer as pr
 from xmlgeneration.link_flow.linkflow_db_util import LinkFlowDatabaseHandle
 
 
@@ -10,92 +11,66 @@ class LinkFlow:
     def __init__(self, database=None):
         self.database = LinkFlowDatabaseHandle(database)
 
-    def write_xml(self, savepath, bin_count, silent=False):
-        
-        elems: List = []
-        bins: List = []
-        nodes: Tuple = ()
-        links: Dict = {}
-
-        if not silent:
-            self.print(f'Beginning network link flow generation to {savepath}.')
-        elems.append('<?xml version="1.0" encoding="UTF-8"?>')
-        elems.append('<!DOCTYPE network SYSTEM "http://www.matsim.org/files/dtd/network_v2.dtd">')
-        elems.append('<network>')
-
-        if not silent:
-            self.print('Fetching network node data.')
-        elems.append('<nodes>')
-        nodes = self.database.fetch_nodes()
-        node_frmt = '<node id="%s" x="%s" y="%s"></node>'
-        if not silent:
-            self.print('Processing node data into formatted xml.')
-        for node in nodes:
-            elems.append(node_frmt % node)
-        nodes = ()
-        elems.append('</nodes>')
-
-        if not silent:
-            self.print('Writing node data to xml file.')
-        with open(savepath, 'w') as outfile:
-            outfile.write(''.join(elems))
-        elems = []
+    def write_xml(self, bin_count, savepath, coords, time, silent=False):
         
         if not silent:
-            self.print('Fetching link network layout data.')
-        network = self.database.fetch_links()
-        links = {link[0]: list(link) + [0]*bin_count for link in network}
+            pr.print('Beginning network link flow sampling.', time=True)
+            pr.print(f'Finding nodes from ({coords[0]}, {coords[1]}) to '
+                f'({coords[2]}, {coords[3]}).', time=True)
+
+        nodes = self.database.find_nodes(*coords)
 
         if not silent:
-            self.print('Fetching leg binnning information.')
-        tmin, tmax = self.database.fetch_bounds()
-        bin_size = (tmax - tmin) / bin_count
-        bins = [round(bin_size * i + tmin) for i in range(bin_count)]
-        bins.append(tmax)
+            pr.print(f'Finding links from ({coords[0]}, {coords[1]}) to ' 
+                f'({coords[2]}, {coords[3]}).', time=True)
+
+        node_ids = tuple(node[0] for node in nodes)
+        links = {link[0]: list(link) for link in self.database.find_links(node_ids)}
+
+        if not silent:
+            pr.print('Fetching extraneous nodes from link sample.', time=True)  
+
+        node_ids = tuple(node for link in links for node in link[1:3])
+        nodes = self.database.fetch_nodes(node_ids)
+
+        bin_size = (time[1] - time[0]) / bin_count
+        bins = [round(bin_size * i + time[0]) for i in range(bin_count)]
+        bins.append(time[1])
 
         for i in range(bin_count):
             if not silent:
-                self.print(f'Fetching leg data form time {bins[i]} to {bins[i+1]}.')
-            times = self.database.fetch_link_times(bins[i], bins[i+1])
-            if not silent:
-                self.print('Updating and merging dictionaries.')
-            for time in times:
-                links[time[0]][i+9] = time[1]
+                pr.print(f'Fetching leg data from time {bins[i]} to {bins[i+1]}.',
+                    time=True)
+            legs = self.database.fetch_link_times(bins[i], bins[i+1], links.keys())
+            for leg in legs:
+                links[leg[0]][i+9] = leg[i]
+            legs = []
 
-        if not silent:
-            self.print('Processing link data into formatted xml.')
-        elems.append('<links>')
-        link_frmt = ('<link id="%d" from="%d" to="%d" length="%d" freespeed="%d" ' +
-            'capacity="%d" permlanes="%d" oneway="%d" modes="%s"><attributes>' +
-            ''.join(['<attribute name="tbin' + str(i) + 
-            '" class="java.lang.Integer">%d</attribute>' for i in range(bin_count)]) +
+        node_frmt = '<node id="%s" x="%s" y="%s"></node>'
+        link_frmt = (
+            '<link id="%s" from="%s" to="%s" length="%s" freespeed="%s" '
+            'capacity="%s" permlanes="%s" oneway="%s" modes="%s"><attributes>' +
+            ''.join([f'<attribute name="tbin{i}" class="java.lang.Integer">' 
+                '%s</attribute>' for i in range(bin_count)]) +
             '</attributes></link>')
 
         if not silent:
-            self.print('Formatting and writing link data to xml.')
+            pr.print(f'Writing network sample at {savepath}.', time=True)
 
-        i = 0
-        with open(savepath, 'a') as outfile:
-            for key in links:
-                elems.append(link_frmt % tuple(links[key]))
-                i += 1
-                if i >= 100000:
-                    outfile.write(''.join(elems))
-                    outfile.flush()
-                    elems = []
-                    i = 0
-            elems.append('</links>')
-            elems.append('</network>')
-            outfile.write(''.join(elems))
-            outfile.flush()
-            elems = []
-            links = {}
+        n = 100000
+        with open(savepath, 'w') as network:
+            network.write(
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                '<!DOCTYPE network SYSTEM "http://www.matsim.org/files/dtd/'
+                'network_v2.dtd"><network><nodes>')
+            for i in range(0, len(nodes), n):
+                network.write(''.join([node_frmt % node for node in nodes[i:i+n]]))
+                network.flush()
+            network.write('</nodes><links>')
+            for i in range(0, len(links), n):
+                network.write(''.join([link_frmt % link for link in links[i:i+n]]))
+                network.flush()
+            network.write('</links></network>')
 
         if not silent:
-            self.print('Network link flow data generation complete.')
-
-
-    def print(self, string):
-        time = datetime.now()
-        print('[' + time.strftime('%H:%M:%S:') + 
-            ('000' + str(time.microsecond // 1000))[-3:] + '] ' + string)
+            pr.print('Network link flow sampling complete.', time=True)

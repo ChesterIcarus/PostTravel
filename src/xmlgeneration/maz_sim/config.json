@@ -1,6 +1,7 @@
 {
     "WORKSTATION": {
-        "savepath": "/home/bbrownlee/data/maz/example_plans.xml",
+        "planpath": "/home/bbrownlee/data/maz/example_plans.xml",
+        "routepath": "/home/bbrownlee/data/maz/example_route.csv",
         "maz": [
             "20112844",
             "40149007B"

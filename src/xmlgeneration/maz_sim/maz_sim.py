@@ -31,7 +31,7 @@ class MazSim:
         return (self.time(route[3] - route[2]), self.time(route[3]),
             route[4], route[5], route[6])
 
-    def generate(self, savepath, mazs):
+    def generate(self, planpath, routepath, mazs):
         pr.print('Generating input plans on select MAZs.', time=True)
         pr.print('Finding agents on selected MAZs.', time=True)
         
@@ -42,28 +42,35 @@ class MazSim:
         route_frmt = '<leg dep_time="%s" mode="%s" trav_time="%s" />'
         act_frmt = '<act dur="%s" end_time="%s" type="%s" x="%s" y="%s" />'
 
-        planfile = open(savepath, 'w')
+        planfile = open(planpath, 'w')
+        routefile = open(routepath, 'w')
         target = len(plans)
 
         pr.print(f'Iterating over {target} plans and building plans file.',
             time=True)
 
         n = 100000
+        planfile.write('<?xml version="1.0" encoding="utf-8"?><!DOCTYPE '
+            'plans SYSTEM "http://www.matsim.org/files/dtd/plans_v4.dtd">')
+        routefile.write('agent_id,route_index,src_maz,term_maz,dep_time,'
+            'mode,dur_time\n')
         for group in self.chunk(plans, n):
             agents = tuple(plan[0] for plan in group)
             routes = list(self.database.get_routes(agents))
             activities = list(self.database.get_activities(agents))
+            routefile.write('\n'.join(','.join(str(attr)
+                for attr in route) for route in routes))
+            routefile.flush()
             for plan in group:
                 planfile.write(plan_frmt % plan[0])
                 for i in range(plan[1] // 2):
-                    planfile.write(act_frmt % 
-                        self.encode_act(activities.pop(0)))
-                    planfile.write(route_frmt % 
-                        self.encode_route(routes.pop(0)))
+                    planfile.write(act_frmt % self.encode_act(activities.pop(0)))
+                    planfile.write(route_frmt % self.encode_route(routes.pop(0)))
                 planfile.write(act_frmt % self.encode_act(activities.pop(0)))
                 planfile.write('</plan></person>')
             planfile.flush()
         planfile.close()
+        routefile.close()
 
         pr.print('Plans generation for select MAZs complete.', time=True)
                     

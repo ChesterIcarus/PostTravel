@@ -9,29 +9,27 @@ class Printer:
     persist_str = ''
     persist_rows = 0
 
+    FRMTS = {
+        'bold': 1,
+        'faint': 2,
+        'italic': 3,
+        'underline': 4,
+        'strikethorugh': 9
+    }
+
     @staticmethod
-    def test():
-        Printer.print('Beginning printer test.')
-        time.sleep(1)
-        Printer.print(Printer.time('This should have a timestamp.'))
-        time.sleep(1)
-        Printer.print('I will stay at the bottom.', persist=True)
-        time.sleep(1)
-        Printer.print('Even when something else is added.')
-        time.sleep(1)
-        Printer.print('But it can be updated.')
-        Printer.print('As seen here.', persist=True, replace=True)
+    def format(string, *frmts):
+        codes = tuple(Printer.FRMTS[frmt] for frmt in frmts if frmt in Printer.FRMTS)
+        return ('\x1b[%sm'*len(codes) % codes) + string + '\x1b[0m'        
     
     @staticmethod
-    def progress(prog, target=1, string = ''):
-        perc = 100 * prog / target
-        bar = ( string + ' [' + 
+    def progress(string, prog):
+        prog = min(1, max(0, prog))
+        perc = 100 * prog
+        return ( string + ' [' + 
                 '=' * int(perc // 5) + 
                 ' ' * int(20 - perc // 5) + 
                 '] ' + str(round(perc, 1)) + '%')
-        print(bar, end='\r', flush=True)
-        if perc >= 100:
-            print()
 
     @staticmethod
     def clear(rows=None):
@@ -41,28 +39,41 @@ class Printer:
         print('\n'*(rows-1) + '\033[F'*rows, end='\r')
 
     @staticmethod
-    def delete(rows=None):
+    def delete(rows):
         pass
 
     @staticmethod
-    def print(string, persist=False, replace=False, time=False):
+    def printer(*args, **kwargs):
+        def custom_print(string, *margs, **mkwarg):
+            Printer.print(string, *args, *margs, **kwargs, **mkwarg)
+        return custom_print
+
+    @staticmethod
+    def print(string, persist=False, replace=True, time=False, progress=None, frmt=None):
         rows, cols = os.popen('stty size', 'r').read().split()
         rows = int(rows)
         cols = int(cols)
         print(('\033[F'+' '*cols)*Printer.persist_rows, end='\r')
         if time:
             string = Printer.time(string)
+        if progress is not None:
+            string = Printer.progress(string, progress)
+        if frmt is not None:
+            if isinstance(frmt, list):
+                string = Printer.format(string, *frmt)
+            elif isinstance(frmt, str):
+                string = Printer.format(string, frmt)
         if persist:
             if not replace and Printer.persist_rows:
                 string = Printer.persist_str + '\n' + string
-            print(string, end='')
+            print(string)
             Printer.persist_rows = sum([math.ceil(len(row) / cols) 
                 for row in string.split('\n')])
             Printer.persist_str = string
         else:
             print(string)
             if Printer.persist_rows:
-                print(Printer.persist_str, end='')        
+                print(Printer.persist_str)        
     
     @staticmethod
     def time(string):

@@ -18,4 +18,4 @@ parser = InputParser(params['database'], params['encoding'])
 for table in params['database']['tables'].keys():
     parser.database.create_table(table, True)
 
-parser.parse(params['source_path'], silent=False)
+parser.parse(params['source_path'])

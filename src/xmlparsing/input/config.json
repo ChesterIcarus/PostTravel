@@ -1,8 +1,9 @@
 {
     "WORKSTATION": {
         "source_path": "/home/Shared/icarus_data/MATsim_input/full_matsim_plans_from_mag.xml",
+        "plans": 2917013,
         "database": {
-            "user": "root",
+            "user": "validation",
             "host": "localhost",
             "db": "icarus_presim",
             "unix_socket": "/home/mysql/mysql.sock",
@@ -24,7 +25,10 @@
                         "act_index MEDIUMINT UNSIGNED",
                         "start_time MEDIUMINT UNSIGNED",
                         "end_time MEDIUMINT UNSIGNED",
-                        "act_type MEDIUMINT UNSIGNED"
+                        "act_type MEDIUMINT UNSIGNED",
+                        "x DOUBLE",
+                        "y DOUBLE",
+                        "maz VARCHAR(24)"
                     ],
                     "comp_PK": [
                         "agent_id",
@@ -37,7 +41,9 @@
                         "route_index MEDIUMINT UNSIGNED",
                         "dep_time INT UNSIGNED",
                         "dur_time INT UNSIGNED",
-                        "mode TINYINT UNSIGNED"
+                        "mode TINYINT UNSIGNED",
+                        "src_maz VARCHAR(24)",
+                        "term_maz VARCHAR(24)"
                     ],
                     "comp_PK": [
                         "agent_id",

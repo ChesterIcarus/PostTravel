@@ -1,0 +1,72 @@
+from datetime import datetime
+from typing import Dict, List, Tuple
+from xml.etree.ElementTree import iterparse
+
+import numpy as np
+
+from xmlgeneration.maz_sim.mazsim_db_util import MazSimDatabaseHandle
+from util.print_util import Printer as pr
+
+
+class MazSim:
+    def __init__(self, database):
+        self.database = MazSimDatabaseHandle(database)
+
+    def chunk(self, arr, n):
+        for i in range(0, len(arr), n):
+            yield arr[i: i+n]
+
+    def time(self, secs):
+        hours = secs // 3600
+        secs -= hours * 3600
+        mins = secs // 60
+        secs -= mins * 60
+        time = [hours, mins, secs]
+        return ':'.join(str(t).format('02d') for t in time)
+
+    def encode_route(self, act):
+        return (self.time(act[4]), act[5], self.time(act[6]))
+
+    def encode_act(self, route):
+        return (self.time(route[3] - route[2]), self.time(route[3]),
+            route[4], route[5], route[6])
+
+    def generate(self, savepath, mazs):
+        pr.print('Generating input plans on select MAZs.', time=True)
+        pr.print('Finding agents on selected MAZs.', time=True)
+        
+        mazs = tuple(mazs)
+        plans = self.database.get_plans(mazs)
+        
+        plan_frmt = '<person id="%s"><plan selected="yes">'
+        route_frmt = '<leg dep_time="%s" mode="%s" trav_time="%s" />'
+        act_frmt = '<act dur="%s" end_time="%s" type="%s" x="%s" y="%s" />'
+
+        planfile = open(savepath, 'w')
+        target = len(plans)
+
+        pr.print(f'Iterating over {target} plans and building plans file.',
+            time=True)
+
+        n = 100000
+        for group in self.chunk(plans, n):
+            agents = tuple(plan[0] for plan in group)
+            routes = list(self.database.get_routes(agents))
+            activities = list(self.database.get_activities(agents))
+            for plan in group:
+                planfile.write(plan_frmt % plan[0])
+                for i in range(plan[1] // 2):
+                    planfile.write(act_frmt % 
+                        self.encode_act(activities.pop(0)))
+                    planfile.write(route_frmt % 
+                        self.encode_route(routes.pop(0)))
+                planfile.write(act_frmt % self.encode_act(activities.pop(0)))
+                planfile.write('</plan></person>')
+            planfile.flush()
+        planfile.close()
+
+        pr.print('Plans generation for select MAZs complete.', time=True)
+                    
+
+
+

@@ -4,6 +4,7 @@ from datetime import datetime
 import numpy as np
 
 from xmlparsing.input.inputparse_db_util import InputDatabaseHandle
+from util.print_util import Printer as pr
 
 class InputParser:
     database: InputDatabaseHandle = None
@@ -14,10 +15,10 @@ class InputParser:
         self.database = InputDatabaseHandle(database)
         self.encoding = encoding
 
-    def parse(self, filepath, bin_size=100000, silent=False):
+    def parse(self, filepath, bin_size=100000):
 
-        if not silent:
-            self.print(f'Beginning XML input plan parsing from {filepath}.')
+        pr.print(f'Beginning XML input plan parsing from {filepath}.', time=True)
+        pr.print('Plan parsing progress:', progress=0, persist=True, frmt=['bold'])
 
         # XML parser
         parser = iterparse(filepath, events=('start', 'end'))
@@ -26,6 +27,7 @@ class InputParser:
 
         # bin counter (total plans processed)
         bin_count = 0
+        total_count = 0
 
         # tabular data
         plans = []
@@ -64,21 +66,22 @@ class InputParser:
                     bin_count += 1
 
                     if bin_count >= bin_size:
-                        if not silent:
-                            self.print(f'Pushing {bin_count} plans to SQL server.')
+                        pr.print(f'Pushing {bin_count} plans to SQL server.', time=True)
 
                         self.database.write_plans(plans)
                         self.database.write_activities(activities)
                         self.database.write_routes(routes)
-                        
-                        if not silent:
-                            self.print('Resuming XML input plan parsing.')
 
                         root.clear()
                         plans = []
                         activities = []
                         routes = []
+                        total_count += bin_count
                         bin_count = 0
+
+                        pr.print('Resuming XML input plan parsing.', time=True)
+                        pr.print('Plan parsing progress:', progress=total_count/2947013,
+                            persist=True, frmt='bold')
                     
                 elif elem.tag == 'act':
                     end_time = self.parse_time(elem.attrib['end_time'])
@@ -90,7 +93,10 @@ class InputParser:
                         activity,                   # act_index
                         end_time - dur_time,        # start_time
                         end_time,                   # end_time
-                        act_type                    # act_type
+                        act_type,                   # act_type
+                        elem.attrib['x'],           # x
+                        elem.attrib['y'],           # y
+                        None                        # maz
                     ])
                     activity += 1
 
@@ -105,19 +111,20 @@ class InputParser:
                         route,                      # route_index
                         dep_time,                   # dep_time
                         dur_time,                   # dur_time
-                        mode                        # mode
+                        mode,                       # mode
+                        None,                       # src_maz
+                        None                        # term_maz
                     ])
                     route += 1
         
-        if not silent:
-            self.print(f'Pushing {bin_count} plans to SQL server.')
+        pr.print(f'Pushing {bin_count} plans to SQL server.', time=True)
+        pr.print('Plan parsing progress:', progress=1, persist=True, frmt='bold')
 
         self.database.write_plans(plans)
         self.database.write_activities(activities)
         self.database.write_routes(routes)
         
-        if not silent:
-            self.print('Completed XML input plan parsing.')
+        pr.print('Completed XML input plan parsing.', time=True)
 
         root.clear()
         plans = []

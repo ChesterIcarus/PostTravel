@@ -4,8 +4,8 @@ from xml.etree.ElementTree import iterparse
 
 import numpy as np
 
-from xmlgeneration.maz_sim.mazsim_db_util import MazSimDatabaseHandle
 from util.print_util import Printer as pr
+from xmlgeneration.maz_sim.mazsim_db_util import MazSimDatabaseHandle
 
 
 class MazSim:
@@ -50,8 +50,8 @@ class MazSim:
             time=True)
 
         n = 100000
-        planfile.write('<?xml version="1.0" encoding="utf-8"?><!DOCTYPE '
-            'plans SYSTEM "http://www.matsim.org/files/dtd/plans_v4.dtd">')
+        planfile.write('<?xml version="1.0" encoding="utf-8"?><!DOCTYPE plans'
+            ' SYSTEM "http://www.matsim.org/files/dtd/plans_v4.dtd"><plans>')
         routefile.write('agent_id,route_index,src_maz,term_maz,dep_time,'
             'mode,dur_time\n')
         for group in self.chunk(plans, n):
@@ -69,11 +69,8 @@ class MazSim:
                 planfile.write(act_frmt % self.encode_act(activities.pop(0)))
                 planfile.write('</plan></person>')
             planfile.flush()
+        planfile.write('</plans>')
         planfile.close()
         routefile.close()
 
         pr.print('Plans generation for select MAZs complete.', time=True)
-                    
-
-
-

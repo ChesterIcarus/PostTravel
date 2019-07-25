@@ -2,6 +2,23 @@ from util.db_util import DatabaseHandle
 from util.print_util import Printer as pr
 
 class MazSimDatabaseHandle(DatabaseHandle):
+    def find_mazs(self, pt1, pt2):
+        query = f'''
+            SELECT
+                maz.maz_id
+            FROM maz
+            WHERE ST_CONTAINS(ST_POLYGONFROMTEXT(
+                {pt1[0]} {pt1[1]},
+                {pt1[0]} {pt2[1]},
+                {pt2[0]} {pt2[1]},
+                {pt2[2]} {pt1[1]},
+                {pt1[0]} {pt1[1]}
+            ), 2223)
+        '''
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
+
+
     def get_plans(self, mazs):
         query = f'''
             SELECT

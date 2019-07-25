@@ -2,9 +2,10 @@
     "WORKSTATION": {
         "planpath": "/home/bbrownlee/data/maz/example_plans.xml",
         "routepath": "/home/bbrownlee/data/maz/example_route.csv",
-        "maz": [
-            "20112844",
-            "40149007B"
+        "maz": [],
+        "bound": [
+            [692404.410602, 884317.153477],
+            [697712.918616, 877839.141325]
         ],
         "database": {
             "user": "validation",

@@ -31,6 +31,9 @@ class MazSim:
         return (self.time(route[3] - route[2]), self.time(route[3]),
             route[4], route[5], route[6])
 
+    def find_mazs(self, pt1, pt2):
+        return self.database.find_mazs(pt1, pt2)
+
     def generate(self, planpath, routepath, mazs):
         pr.print('Generating input plans on select MAZs.', time=True)
         pr.print('Finding agents on selected MAZs.', time=True)

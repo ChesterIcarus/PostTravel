@@ -16,5 +16,7 @@ params['database']['password'] = getpass(
 
 generator = MazSim(params['database'])
 
-generator.generate(params['planpath'], params['routepath'],
-    params['maz'])
+if not len(params['maz']):
+    params['maz'] = generator.find_mazs(*params['bound'])
+
+generator.generate(params['planpath'], params['routepath'], params['maz'])

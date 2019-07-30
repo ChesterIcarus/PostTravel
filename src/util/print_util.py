@@ -28,7 +28,7 @@ class Printer:
         perc = 100 * prog
         return ( string + ' [' + 
                 '=' * int(perc // 5) + 
-                ' ' * int(20 - perc // 5) + 
+                '_' * int(20 - perc // 5) + 
                 '] ' + str(round(perc, 1)) + '%')
 
     @staticmethod

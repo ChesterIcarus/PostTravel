@@ -6,18 +6,19 @@ class MazSimDatabaseHandle(DatabaseHandle):
         query = f'''
             SELECT
                 maz.maz_id
-            FROM maz
+            FROM network.maz
             WHERE ST_CONTAINS(ST_POLYGONFROMTEXT(
-                {pt1[0]} {pt1[1]},
-                {pt1[0]} {pt2[1]},
-                {pt2[0]} {pt2[1]},
-                {pt2[2]} {pt1[1]},
-                {pt1[0]} {pt1[1]}
-            ), 2223)
+                "POLYGON((
+                    {pt1[0]} {pt1[1]},
+                    {pt1[0]} {pt2[1]},
+                    {pt2[0]} {pt2[1]},
+                    {pt2[2]} {pt1[1]},
+                    {pt1[0]} {pt1[1]}))",
+                2223),
+            maz.poly)
         '''
         self.cursor.execute(query)
         return self.cursor.fetchall()
-
 
     def get_plans(self, mazs):
         query = f'''

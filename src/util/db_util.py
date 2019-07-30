@@ -76,6 +76,15 @@ class DatabaseHandle:
         self.cursor.execute(exec_str)
         self.connection.commit()
 
+    def create_spatial_index(self, table, name):
+        cols = ', '.join(self.tables[table]['spatial_indexes'][name])
+        query = f'''
+            CREATE SPATIAL INDEX {name}
+            ON {self.db}.{table} ({cols})
+        '''
+        self.cursor.execute(exec_str)
+        self.connection.commit()
+
     def alter_add_composite_PK(self, table, name):
         formed_index_cols = (', ').join(self.tables[table]['comp_PK'])
         exec_str = f'''ALTER TABLE {self.db}.{table}

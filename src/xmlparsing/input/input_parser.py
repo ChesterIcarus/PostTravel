@@ -18,7 +18,7 @@ class InputParser:
     def parse(self, filepath, bin_size=100000):
 
         pr.print(f'Beginning XML input plan parsing from {filepath}.', time=True)
-        pr.print('Plan parsing progress:', progress=0, persist=True, frmt=['bold'])
+        pr.print('Plan parsing progress:', progress=0, persist=True, frmt='bold')
 
         # XML parser
         parser = iterparse(filepath, events=('start', 'end'))

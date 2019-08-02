@@ -1,6 +1,7 @@
 {
     "WORKSTATION": {
-        "source_path": "/home/Shared/chris_run/ITERS/it.0/0.events.xml",
+        "source_path": "/home/bbrownlee/data/matsim/events.xml",
+        "resume": true,
         "database": {
             "user": "validation",
             "host": "localhost",
@@ -14,9 +15,8 @@
                         "vehicle_id INT UNSIGNED",
                         "event_index INT UNSIGNED",
                         "link_id INT UNSIGNED",
-                        "link_str VARCHAR(300)",
                         "`time` MEDIUMINT UNSIGNED",
-                        "enter TINYINT(1)"
+                        "enter TINYINT(1) UNSIGNED"
                     ]
                 },
                 "vehicle_events": {
@@ -25,11 +25,10 @@
                         "vehicle_id INT UNSIGNED",
                         "agent_id INT UNSIGNED",
                         "`time` MEDIUMINT UNSIGNED",
-                        "enter TINYINT(1)"
+                        "enter TINYINT(1) UNSIGNED"
                     ]
                 }
             }
-        },
-        "update": false
+        }
     }
 }

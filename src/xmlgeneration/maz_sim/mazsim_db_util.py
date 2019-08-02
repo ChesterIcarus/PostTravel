@@ -5,8 +5,8 @@ class MazSimDatabaseHandle(DatabaseHandle):
     def find_mazs(self, pt1, pt2):
         query = f'''
             SELECT
-                maz.maz_id
-            FROM network.maz
+                mazs.maz_id
+            FROM network.mazs
             WHERE ST_CONTAINS(ST_POLYGONFROMTEXT(
                 "POLYGON((
                     {pt1[0]} {pt1[1]},
@@ -15,7 +15,7 @@ class MazSimDatabaseHandle(DatabaseHandle):
                     {pt2[2]} {pt1[1]},
                     {pt1[0]} {pt1[1]}))",
                 2223),
-            maz.poly)
+            mazs.poly)
         '''
         self.cursor.execute(query)
         return self.cursor.fetchall()

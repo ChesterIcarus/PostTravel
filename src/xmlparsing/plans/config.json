@@ -1,6 +1,6 @@
 {
     "WORKSTATION": {
-        "source_path": "/home/Shared/chris_run/output_plans.xml",
+        "source_path": "/home/bbrownlee/data/matsim/plans.xml",
         "database": {
             "user": "validation",
             "host": "localhost",
@@ -24,12 +24,17 @@
                         "act_index MEDIUMINT UNSIGNED",
                         "start_time MEDIUMINT UNSIGNED",
                         "end_time MEDIUMINT UNSIGNED",
-                        "act_type MEDIUMINT UNSIGNED"
+                        "act_type MEDIUMINT UNSIGNED",
+                        "pt POINT",
+                        "apn_id varchar(10)"
                     ],
                     "comp_PK": [
                         "agent_id",
                         "act_index"
-                    ]
+                    ],
+                    "spatial_idx": {
+                        "idx_pt": "pt"
+                    }
                 },
                 "routes": {
                     "schema": [
@@ -39,7 +44,11 @@
                         "dep_time INT UNSIGNED",
                         "dur_time INT UNSIGNED",
                         "distance FLOAT",
-                        "mode TINYINT UNSIGNED"
+                        "mode TINYINT UNSIGNED",
+                        "src_pt POINT",
+                        "term_pt POINT",
+                        "src_apn varchar(10)",
+                        "term_apn varchar(10)"
                     ],
                     "comp_PK": [
                         "agent_id",

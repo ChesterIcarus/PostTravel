@@ -1,6 +1,7 @@
 import json
 from getpass import getpass
 
+from util.print_util import Printer as pr
 from xmlparsing.events.events_parser import EventsParser
 
 CONFIG = 'WORKSTATION'
@@ -15,8 +16,10 @@ params['database']['password'] = getpass(
 
 parser = EventsParser(params['database'])
 
-if not params['update']:
+if not params['resume']:
     for table in params['database']['tables'].keys():
         parser.database.create_table(table, True)
 
-parser.parse(params['source_path'], update=params['update'])
+pr.print('Beginning XML leg/vehicle event parsing '
+         f'from {params["source_path"]}.', time=True)
+parser.parse(params['source_path'], resume=params['resume'])

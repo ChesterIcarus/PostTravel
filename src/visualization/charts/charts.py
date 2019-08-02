@@ -10,7 +10,6 @@ from visualization.charts.charts_db_util import ChartsDatabseHandle
 
 
 class ChartsVisualization:
-
     def __init__(self, database):
         self.database = ChartsDatabseHandle(database)
 
@@ -38,6 +37,57 @@ class ChartsVisualization:
         val2 = [0] * bins.index(bin2[0]) + val2
         val2 = val2 + [0] * (len(bins) - len(val2))
         return bins, val1, val2
+
+    def center_vals(self, vals, n):
+        if n >= len(vals):
+            return 0, len(vals)
+        vals = vals[:]
+        mins = vals[:]
+        low = vals.index(max(mins))
+        high = low + 1
+        mins.pop(low)
+        while True:
+            val = max(mins)
+            pos = vals.index(val)
+            if pos < low:
+                low = max(pos, high - n)
+            elif pos >= high:
+                high = min(pos + 1, low + n)
+            if high - low == n:
+                break
+            mins.pop(mins.index(val))
+        return low, high
+
+    def route_differential(self, savepath, silent=False):
+        if not silent:
+            self.print('Fetching route differenetial data.')
+        
+        bins, freqs = self.database.fetch_route_dif(bin_size=-2)
+
+        if not silent:
+            self.print('Graphing route differential data.')
+
+        low, high = self.center_vals(freqs, 40)
+        bins = bins[low:high]
+        freqs = freqs[low:high] 
+        
+        total = sum(freqs)
+        freqs = [100 * freq / total for freq in freqs]
+        pos = np.arange(len(bins))
+        tick = len(freqs) // 9
+
+        plt.bar(pos, freqs, width=1   , color='b')
+        plt.xticks(pos[0::tick], bins[0::tick])
+        plt.xlabel('percent error')
+        plt.ylabel('occurance (%)')
+        plt.tight_layout()
+
+        if not silent:
+            self.print('Saving route differential graph.')
+
+        plt.savefig(savepath + 'route_differential.png', dpi=1200, bbox_inches='tight')
+        plt.clf()
+
 
     def route_duration(self, savepath, silent=False):
         if not silent:
@@ -78,10 +128,12 @@ class ChartsVisualization:
             self.print('Fetching agent traveling data.')
             
         mag_bin, mag_freq = self.database.fetch_bin_dif(
-            'icarus_presim', 'routes', 'dep_time', 'dep_time + dur_time',
+            'icarus_presim', 'routes', 'dep_time', 
+            'icarus_presim', 'routes', 'dep_time + dur_time',
             bin_size=-2, bin_count=1000)
         mat_bin, mat_freq = self.database.fetch_bin_dif(
-            'icarus_postsim', 'routes', 'dep_time', 'dep_time + dur_time',
+            'icarus_postsim', 'routes', 'dep_time', 
+            'icarus_postsim', 'routes', 'dep_time + dur_time',
             bin_size=-2, bin_count=1000)
         mag_tot = self.database.fetch_count('icarus_presim', 'plans')
         mat_tot = self.database.fetch_count('icarus_postsim', 'plans')

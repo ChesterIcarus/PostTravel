@@ -43,13 +43,19 @@ class Printer:
         pass
 
     @staticmethod
+    def push():
+        persist = Printer.persist_str
+        Printer.print('', persist=True, replace=True)
+        Printer.print(persist)
+
+    @staticmethod
     def printer(*args, **kwargs):
         def custom_print(string, *margs, **mkwarg):
             Printer.print(string, *args, *margs, **kwargs, **mkwarg)
         return custom_print
 
     @staticmethod
-    def print(string, persist=False, replace=True, time=False, progress=None, frmt=None):
+    def print(string, persist=False, replace=False, time=False, progress=None, frmt=None):
         rows, cols = os.popen('stty size', 'r').read().split()
         rows = int(rows)
         cols = int(cols)

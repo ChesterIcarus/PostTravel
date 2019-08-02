@@ -29,7 +29,6 @@ class NeighborhoodDatabaseHandle(DatabaseHandle):
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
-
     def find_links(self, nodes):
         query = f'''
             SELECT

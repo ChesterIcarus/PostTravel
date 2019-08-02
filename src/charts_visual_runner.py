@@ -15,4 +15,4 @@ params['database']['password'] = getpass(
 
 visualizer = ChartsVisualization(params['database'])
 
-visualizer.graph(params['graphs'], params['save_path'])
+visualizer.graph(params['graphs'], params['savepath'])

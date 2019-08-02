@@ -1,9 +1,12 @@
-from typing import List, Dict, Tuple
-import xml.etree.ElementTree as etree
 from datetime import datetime
+from typing import Dict, List, Tuple
+from xml.etree.ElementTree import iterparse
+
 import numpy as np
 
+from util.print_util import Printer as pr
 from xmlparsing.events.eventsparse_db_util import EventsDatabaseHandle
+
 
 class EventsParser:
     database: EventsDatabaseHandle = None
@@ -11,13 +14,12 @@ class EventsParser:
     def __init__(self, database=None):
         self.database = EventsDatabaseHandle(database)
 
-    def parse(self, filepath, bin_size=1000000, silent=False, update=False):
+    def parse(self, filepath, bin_size=1000000, resume=False):
 
-        parser = etree.iterparse(filepath, events=('end','start'))
-        parser = iter(parser)
+        parser = iterparse(filepath, events=('end','start'))
         evt, root = next(parser)
 
-        types: Tuple[str] = ('entered link', 'left link', 
+        types: Tuple[str] = ('entered link', 'left link',
             'PersonEntersVehicle', 'PersonLeavesVehicle')
         links: Dict[str: int] = {}
 
@@ -25,124 +27,114 @@ class EventsParser:
         veh_evts: List[Tuple[int, int, int, int]] = list()
         leg_id: int = 0
         veh_id: int = 0
+        time: int = 0
         bin_count: int = 0
         total_count: int = 0
 
-        if not silent:
-            self.print(f'Beginning XML leg/vehicle event parsing from {filepath}.')
-            self.print('Fetching network link data.')
+        pr.print('Fetching network link data.', time=True)
         links = dict(self.database.fetch_network())
-        if not silent:
-            self.print('Network link data fetch completed.')
+        pr.print('Network link data fetch completed.', time=True)
 
-        if update:
-            if not silent:
-                self.print('Finding where we left off parsing last.')
+        if resume:
+            pr.print('Finding where we left off parsing last.', time=True)
             leg_id = self.database.get_leg_count()
             veh_id = self.database.get_veh_count()
             offset = leg_id + veh_id
-            if not silent:
-                self.print(f'Skipping to event {offset} of XML file.')
-                print(f'\033[1mTotal events parsed: {total_count}\033[0m', end='\r')
-        elif not silent:
-            self.print('Resuming XML leg/vehicle event parsing.')
-            print(f'\033[1mTotal events parsed: {total_count}\033[0m', end='\r')
+            pr.print(f'Skipping to event {offset} of XML file.',)
+        else:
+            pr.print('Resuming XML leg/vehicle event parsing.', time=True)
+
+        pr.print(f'Event Parsing Progress', progress=0, persist=True, 
+            replace=True, frmt='bold')
 
         for evt, elem in parser:
             if elem.tag == 'event' and evt == 'end':
                 etype = elem.attrib['type']
-
-                if update and etype in types:
+                if resume and etype in types:
                     bin_count += 1
                     total_count += 1
                     if bin_count >= bin_size:
+                        time = int(float(elem.attrib['time']))
                         root.clear()
                         bin_count = 0
-                        if not silent:
-                            self.print(f'Skipped to event {total_count}.')
-                            print(f'\033[1mTotal events parsed: {total_count}\033[0m', end='\r')
+                        pr.print(f'Skipped to event {total_count}.')
+                        pr.print(f'Event Parsing Progress', progress=time/86400, 
+                            persist=True, replace=True, frmt='bold')
                     if total_count == offset:
+                        time = int(float(elem.attrib['time']))
                         root.clear()
                         bin_count = 0
-                        update = False
-                        if not silent:
-                            self.print(f'Skipped to event {total_count}.')
-                            self.print('Event skipping complete.')
-                            self.print('Resuming XML leg/vehicle event parsing.')
-                            print(f'\033[1mTotal events parsed: {total_count}\033[0m', end='\r')
+                        resume = False
+                        pr.print(f'Skipped to event {total_count}.', time=True)
+                        pr.print('Event skipping complete.', time=True)
+                        pr.print('Resuming XML leg/vehicle event parsing.', time=True)
+                        pr.print(f'Event Parsing Progress', progress=time/86400,
+                            persist=True, replace=True, frmt='bold')
                     continue
 
                 if etype == 'entered link':
+                    time = int(float(elem.attrib['time']))
                     leg_evts.append((
                         leg_id,
                         int(elem.attrib['vehicle']),
                         None,
                         links[elem.attrib['link']],
-                        elem.attrib['link'],
-                        int(float(elem.attrib['time'])),
-                        1
-                    ))
+                        time,
+                        1))
                     bin_count += 1
                     leg_id += 1
                 elif etype == 'left link':
+                    time = int(float(elem.attrib['time']))
                     leg_evts.append((
                         leg_id,
                         int(elem.attrib['vehicle']),
                         None,
                         links[elem.attrib['link']],
-                        elem.attrib['link'],
-                        int(float(elem.attrib['time'])),
-                        0
-                    ))
+                        time,
+                        0))
                     bin_count += 1
                     leg_id += 1
                 elif etype == 'PersonEntersVehicle':
+                    time = int(float(elem.attrib['time']))
                     veh_evts.append((
                         veh_id,
                         int(elem.attrib['vehicle']),
                         int(elem.attrib['person']),
-                        int(float(elem.attrib['time'])),
-                        1
-                    ))
+                        time,
+                        1))
                     bin_count += 1
                     veh_id += 1
                 elif etype == 'PersonLeavesVehicle':
+                    time = int(float(elem.attrib['time']))
                     veh_evts.append((
                         veh_id,
                         int(elem.attrib['vehicle']),
                         int(elem.attrib['person']),
-                        int(float(elem.attrib['time'])),
-                        0
-                    ))
+                        time,
+                        0))
                     bin_count += 1
                     veh_id += 1
 
                 if bin_count >= bin_size:
                     total_count += bin_size
-                    if not silent:
-                        self.print(f'Pushing {bin_count} events to SQL database.')
-                        print(f'\033[1mTotal events parsed: {total_count}\033[0m', end='\r')
+                    pr.print(f'Pushing {bin_count} events to SQL database.', time=True)
                     self.database.write_leg_evts(leg_evts)
                     self.database.write_veh_evts(veh_evts)
                     root.clear()
-                    leg_evts = list()
-                    veh_evts = list()
+                    leg_evts = []
+                    veh_evts = []
                     bin_count = 0
-                    if not silent:
-                        self.print(f'Resuming XML leg/vehicle event parsing.')
-                        print(f'\033[1mTotal events parsed: {total_count}\033[0m', end='\r')
+                    pr.print(f'Resuming XML leg/vehicle event parsing.', time=True)
+                    pr.print(f'Event Parsing Progress', progress=time/86400,
+                            persist=True, replace=True, frmt='bold')
 
         total_count += bin_size
-        if not silent:
-            self.print(f'Pushing {bin_count} events to SQL database.')
+        pr.print(f'Pushing {bin_count} events to SQL database.', time=True)
         self.database.write_leg_evts(leg_evts)
         self.database.write_veh_evts(veh_evts)
-        if not silent:
-            self.print('XML leg/vehicle event parsing complete.')
-            self.print(f'A total of {total_count} events were parsed.')
-
-    def print(self, string):
-        time = datetime.now()
-        print('[' + time.strftime('%H:%M:%S:') + 
-            ('000' + str(time.microsecond // 1000))[-3:] +
-            ']  ' + string)
+        pr.print(f'Event Parsing Progress', progress=1, persist=True,
+            replace=True, frmt='bold')
+        pr.push()
+        pr.print('XML leg/vehicle event parsing complete.', time=True)
+        pr.print(f'A total of {total_count} events were parsed.', time=True)
+        

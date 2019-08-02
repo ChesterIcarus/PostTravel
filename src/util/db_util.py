@@ -82,10 +82,10 @@ class DatabaseHandle:
             CREATE SPATIAL INDEX {name}
             ON {self.db}.{table} ({cols})
         '''
-        self.cursor.execute(exec_str)
+        self.cursor.execute(query)
         self.connection.commit()
 
-    def alter_add_composite_PK(self, table, name):
+    def alter_add_composite_PK(self, table):
         formed_index_cols = (', ').join(self.tables[table]['comp_PK'])
         exec_str = f'''ALTER TABLE {self.db}.{table}
                         ADD PRIMARY KEY ({formed_index_cols})'''

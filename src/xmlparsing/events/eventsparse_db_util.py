@@ -4,10 +4,8 @@ from util.db_util import DatabaseHandle
 class EventsDatabaseHandle(DatabaseHandle):
     def get_leg_count(self):
         query = f'''
-            SELECT 
-                COUNT(*) as `count`
-            FROM
-                {self.db}.leg_events
+            SELECT COUNT(*)
+            FROM {self.db}.leg_events
         '''
         self.cursor.execute(query)
         result = self.cursor.fetchall()
@@ -15,10 +13,8 @@ class EventsDatabaseHandle(DatabaseHandle):
 
     def get_veh_count(self):
         query = f'''
-            SELECT 
-                COUNT(*) as `count`
-            FROM
-                {self.db}.vehicle_events
+            SELECT COUNT(*) as `count`
+            FROM {self.db}.vehicle_events
         '''
         self.cursor.execute(query)
         result = self.cursor.fetchall()
@@ -29,8 +25,7 @@ class EventsDatabaseHandle(DatabaseHandle):
             SELECT
                 link_str,
                 link_id
-            FROM
-                {self.db}.network_links
+            FROM {self.db}.network_links
         '''
         self.cursor.execute(query)
         return self.cursor.fetchall()
